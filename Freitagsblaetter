@@ -1,0 +1,145 @@
+#!/bin/bash
+# @author Robin Schneider
+# 0/4 *   * * 5   Skripten/Freitagsblätter.sh -d -c
+server_dir="http://www.waldorfschule-balingen.de/newsletter/"
+wget_baseopts="--random-wait -c"
+save_root_dir="$HOME/Schule"	## Sortierung erfolgt nach Schul-Verzeichnis-System
+## http://www.waldorfschule-balingen.de/newsletter/2010-11-12_Freitagsblatt(46).pdf
+
+###
+help_exit (){ echo "„$0 --help“ gibt weitere Informationen.";exit $1; }
+if [ -z "$1" ];then echo "Fehlender Parameter";help_exit 1;fi
+### Funktionen
+fail_parameter (){ echo "Falscher Parameter:\"$1\"";help_exit 1; }
+display_version (){ echo "Version: 0.7.2"; }
+display_shelp (){
+echo "Download Skript: Automatisiert das Herunterladen des wöchentlich erscheinenden Freitagsblatt PDFs, indem es die URL zum PDF selbst generiert und dieses herunterlädt. Außerdem ist eine Datumsberechnung implementiert, die die Berechnung aller Freitage in die Vergangenheit (und Zukunft) und somit das Herunterladen dieser erlaubt. Hierfür ist auch keine Email Adresse oder ein Password von Nöten, wie von Frau Schalow behauptet wurde ;-)
+Usage $0 [Optionen]
+Optionen
+ -d, --download			Läd das aktuelle Freitagsblatt herunter
+ -n, --number			Läd das n. Freitagsblatt herunter (von jetzt ausgehend in die Vergangenheit)
+ -c, --cron			Schreibt in eine Logdatei
+ -h, --help			diese Hilfe anzeigen und beenden
+ -v, --version  		Versionsinformation anzeigen und beenden"
+} # -t, --timestamp=		Läd das Freitagsblatt, dessen Datum übergeben wurde [YYYY-MM-DD]
+
+dir_print (){
+if [ $month -lt "8" ]
+then	echo "$save_root_dir/Klasse$yearZ/Metadaten/Freitagsblätter${year}"
+else	echo "$save_root_dir/Klasse$(($yearZ + 1))/Metadaten/Freitagsblätter${year}"
+fi
+}
+
+url_print (){
+case $Kalenderwoche in
+	8)	in_brackets="8+9"		;;		## Yes, this time it the two numbers were separated by plus
+								## 2012-02-17_Freitagsblatt_(8+9).pdf
+	30)	in_brackets="30-37"		;;
+	51)	in_brackets="51-2"		;;
+	*)	in_brackets="$Kalenderwoche"	;;
+esac
+
+if [ "$year$month$day" -gt 201109 ]
+then	if [ "$year$month$day" -gt 20111006 ]
+	then	if [ "$year$month$day" -gt 20120101 ]
+		then	echo "${server_dir}${year}-${month}-${day}_Freitagsblatt_($in_brackets).pdf"
+		else	echo "${server_dir}${year}-${month}-${day}_Freitagsblatt($in_brackets).pdf"
+		fi
+	else	echo "${server_dir}${year}-${month}-${day}_Freitagsblatt ($in_brackets).pdf"
+	fi
+else	echo "${server_dir}${year}-${month}-${day}_Freitagsblatt($in_brackets).pdf"
+fi
+}
+
+old_url_print (){
+echo "${server_dir}${year}-${month}-${day}_Freitagsblatt.pdf"
+}
+
+file_download (){
+if [ -s `dir_print`/${month}-${day}.pdf ]
+then	echo "Die Datei `dir_print`/${month}-${day}.pdf existiert bereits."
+	return 1
+fi
+mkdir -p "`dir_print`" #2010-11-12_Freitagsblatt(46).pdf
+wget $wget_baseopts "$url" -O "`dir_print`/${month}-${day}.pdf" 2>&1
+find "`dir_print`/${month}-${day}.pdf" -empty -delete
+}
+
+if_var_empty (){
+if [ -z "$2" ]
+then	echo "Der Parameter -$1 wurde ohne Argumente aufgerufen"
+	exit 1
+fi
+}
+if_var_n (){
+if_var_empty n $1
+if [ -n "$number" ]
+then	echo "Es kann nur ein -n übergeben werde"
+	exit 1
+fi
+number=$1
+}
+### Ende Funktionen
+### Parameter Auswertung
+while [ $# -ge 1 ]
+do	case $1 in
+	-d | --download			) download=1				; shift		;;
+#	--timestamp=*			) t_t=${1#--timestamp=};if_var_t $t_t	; shift		;;
+	-n | --number			) if_var_n $2				; shift ; shift	;;
+	-c | --cron			) cron=1				; shift		;;
+	-v | --version			) display_version			; exit 0	;;
+	-h | --help			) display_shelp				; exit 0	;;
+	*				) fail_parameter "$1"					;;
+	esac
+done
+### Ende Parameter Auswertung
+### If Abfragen/Programmablauf
+(
+if [ -z "$number" ]
+	then	if [ ! "`date +%w`" == 5 ]
+		then	echo "Es ist nicht Freitag. Bitte Benutzen sie -n, --number um ein vorheriges Freitagsblatt Herunterladen."
+		exit 1
+		fi
+		year=`date +%Y`
+		yearZ=`date +%g`
+		month=`date +%m`
+		day=`date +%d`
+		#2010-11-12_Freitagsblatt(46).pdf oder in Ferien z.B. 2010-11-12_Freitagsblatt(46-47).pdf.
+		#Letzteres ist noch nicht implementiert.
+		dateW=`date +%W`
+		Kalenderwoche="`echo $dateW + 1| bc -l`"
+		#day=01
+	else	year=`echo date +%Y -d \'last Friday $number week ago\'|sh`
+		yearZ=`echo date +%g -d \'last Friday $number week ago\'|sh`
+		month=`echo date +%m -d \'last Friday $number week ago\'|sh`
+		day=`echo date +%d -d \'last Friday $number week ago\'|sh`
+		dateW=`echo date +%W -d \'last Friday $number week ago\'|sh`
+		Kalenderwoche="`echo $dateW + 1| bc -l`"
+fi
+
+if [ -n "$download" ]
+then	if [ "$year" -lt "2011" ]
+	then	url="`old_url_print`"
+	else	url="`url_print`"
+	fi
+	file_download
+else	echo "Die URL lautet: `url_print`"
+	echo "-d, --download wurde nicht mit aufgerufen."
+	if [ "$year" -lt "2011" ]
+	then	echo "Da die Dateinamensstruktur der Freitagsblätter nicht einheitlich ist, ist eine Automatisierung schwer."
+		echo "Probieren sie lieber: `old_url_print`"
+		echo "respektive -d, --download"
+	fi
+fi
+
+) |	if [ "$cron" == "1" ]
+	then	mkdir -p "$HOME/log/`date +%Y/%m`"
+		logfile="$HOME/log/`date +%Y/%m/%d`"
+		cat >> "$logfile.log" 2>> "$logfile.err"
+		date >> "$logfile.log"
+		echo -e "********************************\n`date`" >> "$logfile.log"
+	else	cat
+	fi
+### Ende If Abfragen/Programmablauf
+exit 0
+
