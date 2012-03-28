@@ -13,7 +13,7 @@ if [ -z "$1" ];then echo "Fehlender Parameter";help_exit 1;fi
 fail_parameter (){ echo "Falscher Parameter:\"$1\"";help_exit 1; }
 display_version (){ echo "Version: 0.7.2"; }
 display_shelp (){
-echo "Download Skript: Automatisiert das Herunterladen des wöchentlich erscheinenden Freitagsblatt PDFs, indem es die URL zum PDF selbst generiert und dieses herunterlädt. Außerdem ist eine Datumsberechnung implementiert, die die Berechnung aller Freitage in die Vergangenheit (und Zukunft) und somit das Herunterladen dieser erlaubt. Hierfür ist auch keine Email Adresse oder ein Password von Nöten, wie von Frau Schalow behauptet wurde ;-)
+echo "Download Skript: Automatisiert das Herunterladen des wöchentlich erscheinenden Freitagsblatt PDFs, indem es die URL zum PDF selbst generiert und dieses herunterlädt. Außerdem ist eine Datumsberechnung implementiert, die die Berechnung aller Freitage in die Vergangenheit (und Zukunft) und somit das Herunterladen dieser erlaubt. Hierfür ist auch keine Email Adresse oder ein Password von Nöten, wie behauptet wurde ;-)
 Usage $0 [Optionen]
 Optionen
  -d, --download			Läd das aktuelle Freitagsblatt herunter
@@ -32,7 +32,7 @@ fi
 
 url_print (){
 case $Kalenderwoche in
-	8)	in_brackets="8+9"		;;		## Yes, this time it the two numbers were separated by plus
+	8)	in_brackets="8+9"		;;		## Yes, this time the two numbers were separated by plus
 								## 2012-02-17_Freitagsblatt_(8+9).pdf
 	30)	in_brackets="30-37"		;;
 	51)	in_brackets="51-2"		;;

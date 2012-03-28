@@ -1,0 +1,6 @@
+#!/bin/bash
+if [ -d .git ]
+then	echo "`git log --pretty="%h" | wc -l`"
+else	echo 0
+fi
+

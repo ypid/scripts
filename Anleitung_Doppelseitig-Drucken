@@ -1,0 +1,75 @@
+#!/bin/bash
+# @author Robin Schneider
+#Ablauf:
+#-Ungerade Seiten Rückwerts Drucken
+#-Blätter Umdrehen und wieder einlegen
+#-Gerade Seiten Drucken.
+#
+
+Seitenzahl_einlesen (){
+	counter=0
+	while true
+	do	read seiten
+		if [ 0 -lt "$seiten" ]
+		then	break
+		else	counter=$((counter+1))
+			if [ "$counter" -gt 22 ]
+			then
+				if [ "$counter" -gt 23 ]
+				then echo -n "Dies ist ihr $counter versuch ...: "
+				else echo -n "So langsam müsste es ihnen doch gelingen eine Zahl zwischen 1 und plus unendlich einzugeben. Dies ist ihr $counter versuch …: "
+				fi
+			else	echo -n 'Bitte geben Sie eine Korrekte Seitenzahl an!!!: '
+			fi
+		fi
+	done
+}
+
+if [ ! -z $1 ]
+then	if [ 0 -lt "$1" ]
+	then	seiten=$1
+	else	echo -n 'Bitte übergeben Sie eine Korrekte Seitenzahl.: '
+		Seitenzahl_einlesen
+	fi
+else	echo -n "Bitte geben Sie die Seitenzahl an: "
+	Seitenzahl_einlesen
+fi
+
+if [ "1" == "$seiten" ]
+then	echo "Drucken sie einfach die eine Seite ;-)"
+	exit 1
+fi
+
+
+seiten_2=$((seiten/2))
+
+seiten_if=$((seiten_2*2))
+if [ ! "$seiten_if" == "$seiten" ]
+then	seiten_2add1=$((seiten_2+1))
+	if [ "$seiten_2add1" == "1" ];then echo "Insgesamt wird eine Seite benötigt.";else echo "Insgesamt werden $seiten_2add1 Seiten benötigt.";fi
+	echo -n "Drucken sie die ungeraden Seiten : $seiten,"
+	seiten_ungerade=$((seiten-2))
+else	if [ "$seiten_2" == "1" ];then echo "Insgesamt wird eine Seite benötigt.";else echo "Insgesamt werden $seiten_2 Seiten benötigt.";fi
+	echo -n 'Drucken sie die ungeraden Seiten : '
+	seiten_ungerade=$(($seiten-1))
+fi
+for i in `seq 1 $seiten_2`
+do	echo -n "$seiten_ungerade"
+	if [ ! "$i" = "$seiten_2" ]
+	then	echo -n ","
+	fi
+	seiten_ungerade=$((seiten_ungerade-2))
+done
+
+read fnort
+echo 'Nehmen sie die Blätter heraus und legen Sie diese wieder ins Papierfach'
+echo -n 'Drucken sie abschließend die geraden Seiten : '
+for i in `seq 1 $seiten_2`
+do	seiten_gerade=$((seiten_gerade+2))
+	echo -n "$seiten_gerade"
+	if [ ! "$i" = "$seiten_2" ]
+	then	echo -n ","
+	fi
+done
+echo
+exit 0
