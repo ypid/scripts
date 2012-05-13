@@ -10,8 +10,8 @@ save_root_dir="$HOME/Schule"	## Sortierung erfolgt nach Schul-Verzeichnis-System
 help_exit (){ echo "„$0 --help“ gibt weitere Informationen.";exit $1; }
 if [ -z "$1" ];then echo "Fehlender Parameter";help_exit 1;fi
 ### Funktionen
-fail_parameter (){ echo "Falscher Parameter:\"$1\"";help_exit 1; }
-display_version (){ echo "Version: 0.7.2"; }
+fail_parameter (){ echo "Falscher Parameter: \"$1\"";help_exit 1; }
+display_version (){ echo "Version: 0.7.3"; }
 display_shelp (){
 echo "Download Skript: Automatisiert das Herunterladen des wöchentlich erscheinenden Freitagsblatt PDFs, indem es die URL zum PDF selbst generiert und dieses herunterlädt. Außerdem ist eine Datumsberechnung implementiert, die die Berechnung aller Freitage in die Vergangenheit (und Zukunft) und somit das Herunterladen dieser erlaubt. Hierfür ist auch keine Email Adresse oder ein Password von Nöten, wie behauptet wurde ;-)
 Usage $0 [Optionen]
@@ -34,6 +34,8 @@ url_print (){
 case $Kalenderwoche in
 	8)	in_brackets="8+9"		;;		## Yes, this time the two numbers were separated by plus
 								## 2012-02-17_Freitagsblatt_(8+9).pdf
+	14)	in_brackets="14-16"		;;
+	20)	in_brackets="20-21"		;;
 	30)	in_brackets="30-37"		;;
 	51)	in_brackets="51-2"		;;
 	*)	in_brackets="$Kalenderwoche"	;;
