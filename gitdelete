@@ -1,0 +1,2 @@
+#!/bin/bash
+git status|grep deleted|while read i; do git rm -f "`echo "$i"|sed 's/^#\tdeleted:    //'`";done
