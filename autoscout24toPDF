@@ -21,9 +21,9 @@ then	echo "$filename exists. Press enter to continue."
 	read fnord
 fi
 
-url="http://www.autoscout24.de/Details.aspx?id=$id"
+url="http://www.autoscout24.de/PrintViewArticles.aspx?id=$id"
 wkhtmltopdf "$url" "$filenametmpI"
-pdfcrop --margins '0 -105 -170 0' "$filenametmpI" "$filenametmpII" 
+pdfcrop --margins '0 -27 0 0' "$filenametmpI" "$filenametmpII" 
 echo -n '\documentclass[a4paper]{scrartcl}\usepackage{pdfpages}\begin{document}\includepdf{' > "$LaTeXtmpfile"
 echo -n "$filenametmpII" >> "$LaTeXtmpfile"
 echo '}\end{document}' >> "$LaTeXtmpfile"

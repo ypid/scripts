@@ -29,7 +29,9 @@ sed 's/M-CM-</ü/g' \
 |sed 's/M-CM-^D/Ä/g' \
 |sed 's/M-CM-6/ö/g' \
 |sed 's/M-CM-^V/Ö/g' \
-|sed 's/M-CM-^_/ß/g' 
+|sed 's/M-CM-^_/ß/g' \
+|sed 's/M-bM-^@M-^^/„/g' \
+|sed 's/M-bM-^@M-^\\/“/g'
 }
 param="$#"
 

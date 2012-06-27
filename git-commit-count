@@ -1,6 +1,11 @@
 #!/bin/bash
 if [ -d .git ]
-then	echo "`git log --pretty="%h" | wc -l`"
-else	echo 0
+then	n="`git log --pretty="%h" | wc -l`"
+else	n=0
 fi
 
+if [ -n "$GitCommitCountOffset" ]
+then	n=$(($GitCommitCountOffset + $n))
+fi
+
+echo $n

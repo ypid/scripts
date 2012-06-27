@@ -4,3 +4,4 @@ then	echo "Please Enter a command for git like gc or fsck. This command will be 
 	exit 1
 fi
 find . -name ".git"|while read i;do e=${i%.git}; pushd "$e";git $1; popd >/dev/null;done
+
