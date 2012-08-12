@@ -1,0 +1,26 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use autodie;
+use feature qw(say);
+use Debian::AptContents;
+
+my $c = Debian::AptContents->new(
+	{
+		homedir => '/home/rsadmin/.dh-make-perl',
+		verbose => 0
+	}
+);
+
+unless (@ARGV) {
+	@ARGV = qw(DateTime Perl::Critic::Bangs HTML::Parser);
+}
+
+my @install;
+for my $module (@ARGV) {
+	if ( my $apt_package = $c->find_perl_module_package($module) ) {
+		say "$module: $apt_package";
+		push @install, $apt_package;
+	}
+}
+say "aptitude install @install";
