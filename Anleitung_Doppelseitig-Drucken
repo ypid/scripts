@@ -12,14 +12,14 @@ Seitenzahl_einlesen (){
 	do	read seiten
 		if [ 0 -lt "$seiten" ]
 		then	break
-		else	counter=$((counter+1))
+		else	counter=$(($counter+1))
 			if [ "$counter" -gt 22 ]
 			then
 				if [ "$counter" -gt 23 ]
 				then echo -n "Dies ist ihr $counter versuch ...: "
 				else echo -n "So langsam müsste es ihnen doch gelingen eine Zahl zwischen 1 und plus unendlich einzugeben. Dies ist ihr $counter versuch …: "
 				fi
-			else	echo -n 'Bitte geben Sie eine Korrekte Seitenzahl an!!!: '
+			else	echo -n 'Bitte geben Sie eine korrekte Seitenzahl an!!!: '
 			fi
 		fi
 	done
@@ -28,7 +28,7 @@ Seitenzahl_einlesen (){
 if [ ! -z $1 ]
 then	if [ 0 -lt "$1" ]
 	then	seiten=$1
-	else	echo -n 'Bitte übergeben Sie eine Korrekte Seitenzahl.: '
+	else	echo -n 'Bitte übergeben Sie eine korrekte Seitenzahl.: '
 		Seitenzahl_einlesen
 	fi
 else	echo -n "Bitte geben Sie die Seitenzahl an: "

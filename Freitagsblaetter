@@ -18,6 +18,7 @@ Usage $0 [Optionen]
 Optionen
  -d, --download			Läd das aktuelle Freitagsblatt herunter
  -n, --number			Läd das n. Freitagsblatt herunter (von jetzt ausgehend in die Vergangenheit)
+ -o, --open			Öffnet das PDF mit evince
  -c, --cron			Schreibt in eine Logdatei
  -h, --help			diese Hilfe anzeigen und beenden
  -v, --version  		Versionsinformation anzeigen und beenden"
@@ -59,13 +60,13 @@ echo "${server_dir}${year}-${month}-${day}_Freitagsblatt.pdf"
 }
 
 file_download (){
-if [ -s `dir_print`/${month}-${day}.pdf ]
-then	echo "Die Datei `dir_print`/${month}-${day}.pdf existiert bereits."
+if [ -s "$PDFfile" ]
+then	echo "Die Datei "$PDFfile" existiert bereits."
 	return 1
 fi
 mkdir -p "`dir_print`" #2010-11-12_Freitagsblatt(46).pdf
-wget $wget_baseopts "$url" -O "`dir_print`/${month}-${day}.pdf" 2>&1
-find "`dir_print`/${month}-${day}.pdf" -empty -delete
+wget $wget_baseopts "$url" -O "$PDFfile" 2>&1
+find "$PDFfile" -empty -delete
 }
 
 if_var_empty (){
@@ -90,6 +91,7 @@ do	case $1 in
 #	--timestamp=*			) t_t=${1#--timestamp=};if_var_t $t_t	; shift		;;
 	-n | --number			) if_var_n $2				; shift ; shift	;;
 	-c | --cron			) cron=1				; shift		;;
+	-o | --open			) openPDF=1				; shift		;;
 	-v | --version			) display_version			; exit 0	;;
 	-h | --help			) display_shelp				; exit 0	;;
 	*				) fail_parameter "$1"					;;
@@ -120,6 +122,7 @@ if [ -z "$number" ]
 		Kalenderwoche="`echo $dateW + 1| bc -l`"
 fi
 
+PDFfile="`dir_print`/${month}-${day}.pdf"
 if [ -n "$download" ]
 then	if [ "$year" -lt "2011" ]
 	then	url="`old_url_print`"
@@ -133,6 +136,10 @@ else	echo "Die URL lautet: `url_print`"
 		echo "Probieren sie lieber: `old_url_print`"
 		echo "respektive -d, --download"
 	fi
+fi
+
+if [ "$openPDF" == 1 ] && [ "$cron" != 1 ]
+then	evince $PDFfile
 fi
 
 ) |	if [ "$cron" == "1" ]
