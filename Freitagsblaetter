@@ -33,7 +33,7 @@ fi
 
 url_print (){
 case $Kalenderwoche in
-	8)	in_brackets="8+9"		;;		## Yes, this time the two numbers were separated by plus
+	8)	in_brackets="8+9"		;;		## Yes, this time the two numbers were separated by plus sign
 								## 2012-02-17_Freitagsblatt_(8+9).pdf
 	14)	in_brackets="14-16"		;;
 	20)	in_brackets="20-21"		;;
@@ -101,20 +101,19 @@ done
 ### If Abfragen/Programmablauf
 (
 if [ -z "$number" ]
-	then	if [ ! "`date +%w`" == 5 ]
+then	if [ ! "`date +%w`" == 5 ]
 		then	echo "Es ist nicht Freitag. Bitte Benutzen sie -n, --number um ein vorheriges Freitagsblatt Herunterladen."
-		exit 1
+			exit 1
 		fi
 		year=`date +%Y`
 		yearZ=`date +%g`
 		month=`date +%m`
 		day=`date +%d`
-		#2010-11-12_Freitagsblatt(46).pdf oder in Ferien z.B. 2010-11-12_Freitagsblatt(46-47).pdf.
-		#Letzteres ist noch nicht implementiert.
+		## 2010-11-12_Freitagsblatt(46).pdf oder in Ferien z. B. 2010-11-12_Freitagsblatt(46-47).pdf.
+		## Letzteres ist noch nicht implementiert.
 		dateW=`date +%W`
 		Kalenderwoche="`echo $dateW + 1| bc -l`"
-		#day=01
-	else	year=`echo date +%Y -d \'last Friday $number week ago\'|sh`
+	else year=`echo date +%Y -d \'last Friday $number week ago\'|sh`
 		yearZ=`echo date +%g -d \'last Friday $number week ago\'|sh`
 		month=`echo date +%m -d \'last Friday $number week ago\'|sh`
 		day=`echo date +%d -d \'last Friday $number week ago\'|sh`
@@ -152,4 +151,3 @@ fi
 	fi
 ### Ende If Abfragen/Programmablauf
 exit 0
-

@@ -5,10 +5,11 @@ use autodie;
 use feature qw(say);
 use Debian::AptContents;
 
+chdir; ## go to the home directory
 my $c = Debian::AptContents->new(
 	{
-		homedir => '/home/rsadmin/.dh-make-perl',
-		verbose => 0
+		homedir => '.dh-make-perl',
+#		verbose => 0,
 	}
 );
 
@@ -23,4 +24,4 @@ for my $module (@ARGV) {
 		push @install, $apt_package;
 	}
 }
-say "aptitude install @install";
+say "aptitude install @install" if @install;
