@@ -3,6 +3,6 @@
 ## O'Reilly LaTeX Hack #91
 
 file=`kpsewhich $1`
-if [ -n $file ]
+if [ -n "$file" ]
 then	editor $file
 fi
