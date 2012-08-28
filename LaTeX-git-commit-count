@@ -1,7 +1,0 @@
-#!/bin/bash
-## \readgitstat{7}
-reversiongit="`git-commit-count`"
-shorthashgit="`git rev-parse --short HEAD`"
-echo '\setcounter{reversiongit}{'${reversiongit}'}'
-echo '\newcommand{\shorthashgit}{'${shorthashgit}'}'
-
