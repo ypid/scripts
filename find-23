@@ -1,0 +1,55 @@
+#!/bin/bash
+foundtext="Match"
+if [ $# -eq 0 ]
+then	echo "Dies Skript sucht die Zahl 23 aus der jeweiligen Position der Buchstaben im Alphabet"
+	exit 1
+fi
+
+tmpfile="/tmp/.AlphabetNumber"
+if [ ! -s $tmpfile ]
+then	c=0;for i in {a..z};do c=$(($c+1));echo -e "$i\t$c";done > $tmpfile
+fi
+
+onecharacter() {
+tmp="`grep $1 $tmpfile`"
+tmp=${tmp#???}
+if [ "$tmp" -eq "23" ]
+then	echo -e "$1\t=\t$tmp "'\E[37;44m'"\033[1m$foundtext\033[0m"
+else	echo -e "$1\t=\t$tmp"
+fi
+}
+
+manycharacter() {
+c=0
+length="`echo -n "$1"|wc -m`"
+lengthp=1	#>
+while [ $lengthp -le $length ]
+do	onecharacter ${1:$(($lengthp-1)):1}
+	c=$((tmp+c))
+	lengthp=$((lengthp+1))
+done
+}
+
+param=$#
+while [ $# -ge 1 ]
+do	echo -e "Wort:\t$1"
+	manycharacter `echo "$1" |tr '[A-Z]' '[a-z]'`
+	if [ ! "$c" -eq "$tmp" ]
+	then	echo "------------------"
+		if [ "$c" -eq "23" ]
+		then	echo -e "Summe\t=\t$c "'\E[37;44m'"\033[1m$foundtext\033[0m"
+		else	echo -e "Summe\t=\t$c"
+		fi
+	fi
+	shift
+	all=$((c+all))
+	echo
+done
+
+if [ "$param" -gt 1 ]
+then	if [ "$all" -eq "23" ]
+	then	echo -e "All\t=\t$all "'\E[37;44m'"\033[1m$foundtext\033[0m"
+	else	echo -e "All\t=\t$all"
+	fi
+fi
+
