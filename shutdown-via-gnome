@@ -1,0 +1,8 @@
+#!/bin/bash
+
+for i in `seq 2`;
+	do dbus-send --session --type=method_call --print-reply --dest=org.gnome.SessionManager /org/gnome/SessionManager org.gnome.SessionManager.RequestShutdown
+done
+## Ubuntu 11.04
+
+dbus-send --system --print-reply --dest="org.freedesktop.Hal" /org/freedesktop/Hal/devices/computer org.freedesktop.Hal.Device.SystemPowerManagement.Shutdown ## Debian 6.0
