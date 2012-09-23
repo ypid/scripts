@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use utf8;
 use CGI;
-$CGI::POST_MAX = 1024 * 1024 * 1024 * 5;   ## Maximalgröße einer Datei ist 5GB
+$CGI::POST_MAX = 1024 * 1024 * 1024 * 5;   ## Maximum file size is 5GB
 use CGI::Carp qw(fatalsToBrowser);
 use Digest::MD5;
 use Digest::SHA;
@@ -32,7 +32,7 @@ $user_agent =~ s# #_#g;
 $path .= "/$user_agent";
 mkdir $path;
 $path .= "/$ENV{REMOTE_ADDR}";
-mkdir $path;
+mkdir $path; ## I know there is a module for this but I want performance^^
 
 upload_file( $filename, $filehandle );
 print "<br>\n". $cgi->a( { -href => "index.html" }, "Weitere Datei hochladen" ) . $cgi->end_html();
