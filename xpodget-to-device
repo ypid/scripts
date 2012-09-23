@@ -1,0 +1,70 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use autodie;
+no autodie qw(readlink);
+use feature qw(say);
+use utf8;
+use Const::Fast;
+use File::Basename;
+use File::Copy;
+use Filesys::Df;
+## cpan Filesys::Df
+const my $dev_label         => '8GB';
+const my $remain_blocks     => 100; ## How many MBs free space should remain
+const my $source_path       => "$ENV{HOME}/change-podcast/podcasts";
+const my @filetypes         => qw( mp3 );
+const my $target_mount_path => "/media/$dev_label";
+const my $target_path       => "$target_mount_path/Sounds/Digital/podcast";
+
+die "mount $source_path\n" unless -e $source_path;
+
+## Mount target
+my $dev = readlink "/dev/disk/by-label/8GB"
+  or die "Please plug in the device for me …\n";
+$dev = '/dev/' . basename $dev;
+system 'gvfs-mount', '-d', $dev; ## The exit codes of gvfs-mount are not very useful
+
+my $target_df = df($target_mount_path)
+  or die "Can not open $target_mount_path: $!\n";
+my $free_blocks = $target_df->{bfree};
+{
+    my $per_avail = 100 - $target_df->{per};
+    say "There are $per_avail % space left";
+}
+
+my $copied_MBs = 0;
+PODDIR:
+for my $pod_dir ( glob "$source_path/*" ) {
+  PODFILE:
+    for my $pod_file ( glob "$pod_dir/*" ) {
+        next PODFILE if $pod_file eq "$pod_dir/familiar";
+        for (@filetypes) {
+            if ( $pod_file =~ /.*\.$_\z/xms ) {
+                my $needed_blocks = -s $pod_file;
+                $needed_blocks /= 1024;
+                unless ( $free_blocks > $needed_blocks + $remain_blocks * 1024 ) {
+                    last PODDIR;
+                }
+                my $basefile    = basename $pod_file;
+                my $target_file = "$target_path/$basefile";
+                if ( -e $target_file ) {
+                    say "File $basefile already exists on the target device.";
+                    next PODFILE;
+                }
+                print $target_file;
+                copy $pod_file, $target_file;
+                move $pod_file, "$pod_dir/familiar";
+                $free_blocks -= $needed_blocks;
+                $copied_MBs  += $needed_blocks / 1024;
+                say " done.";
+                printf '%.2f$ MB copied.', $copied_MBs; ## debug
+            } ## end if ( $pod_file =~ /.*\.$_\z/xms)
+        } ## end for (@filetypes)
+    } ## end for my $pod_file ( glob...)
+} ## end for my $pod_dir ( glob ...)
+
+printf '%.2f$ MB copied.', $copied_MBs;
+
+sleep 50;
+system 'gvfs-mount', '-u', $target_mount_path;
