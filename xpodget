@@ -51,7 +51,7 @@ do	case $1 in
 	-o | --mv-old			) mv_old=1				; shift		;;
 	-u | --update			) update=1				; shift		;;
 	-d | --download			) download=1				; shift		;;
-	-a | --all			) mv_old=1;download=1			; shift		;;
+	-a | --all			) update=1;download=1;mv_old=1		; shift		;;
 	-v | --version			) display_version			; exit 0	;;
 	-h | --help			) display_shelp				; exit 0	;;
 	*				) fail_parameter "$1"					;;
@@ -101,7 +101,7 @@ then	HOME_old="$HOME"
 	export HOME="$HOME_old"
 fi
 
-if [ $mv_old == 1 ]
+if [ "$mv_old" == 1 ]
 then	find "$podcasts" -type d -name "familiar" -not -empty|while read dir
 	do	casttitle=${dir#$podcasts/}
 		casttitle=${casttitle%/familiar}
