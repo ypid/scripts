@@ -3,27 +3,27 @@
 
 ## default config
 config_dir="$HOME/.xpodget"
-log_dir="$config_dir/Log/`date +%Y/%m`" ## Wird angelegt
+log_dir="$config_dir/Log/`date +%Y/%m`"
 config_file="$config_dir/xpodget.conf"
 
 ###
-help_exit (){ echo "„$0 --help“ gibt weitere Informationen.";exit $1; }
-if [ -z "$1" ];then echo "Fehlender Parameter";help_exit 1;fi
+help_exit (){ echo "„$0 --help“ to get more information"; exit $1; }
+if [ -z "$1" ];then echo "Missing parameter"; help_exit 1;fi
 ### Funktionen
-fail_parameter (){ echo "Falscher Parameter:\"$1\"";help_exit 1; }
-display_version (){ echo "Version: 0.4"; }
+fail_parameter (){ echo "Wrong parameter: \"$1\""; help_exit 1; }
+display_version (){ echo "Version: 0.9"; }
 display_shelp (){
 echo "Usage $0 [options]
-Optionen
- -c, --cron			Schreibt in eine Logdatei
- -m, --make-config		Erstellt die config Datei
- -r, --remove			Entfernt die leeren Verzeichnisse
- -o, --mv-old			Verschiebt die bekannten Podcasts
- -u, --update			Aktualisiert die lokale Podcastdatenbank
- -d, --download			Läd neue Episoden herunter
- -a, --all			Gleich wie \"-o -u -d\"
- -h, --help			diese Hilfe anzeigen und beenden
- -v, --version  		Versionsinformation anzeigen und beenden"
+Options
+ -c, --cron			Writes everything to a log file
+ -m, --make-config		Creates the config file
+ -r, --remove			Removes empty directories
+ -o, --mv-old			Moves familiar podcasts
+ -u, --update			Updates the local podcast database
+ -d, --download			Downloads new podcast episodes
+ -a, --all			Equal to \"-o -u -d\"
+ -h, --help			Shows this help text
+ -v, --version  		Shows the version of this program"
 }
 
 make_config (){
