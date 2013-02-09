@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# Core Module
 use strict;
 use warnings;
 use utf8;
@@ -21,6 +20,7 @@ my $delete = 0;
 my $ask    = 0;
 my $help   = 0;
 my $man    = 0;
+
 GetOptions(
     'delete' => \$delete,
     'ask'    => \$ask,
@@ -29,12 +29,16 @@ GetOptions(
 );
 
 # Help Textes
-pod2usage({
-    -verbose => 1,
-}) if $help;
-pod2usage({
-    -verbose => 2,
-}) if $man;
+pod2usage(
+    {
+        -verbose => 1,
+    }
+) if $help;
+pod2usage(
+    {
+        -verbose => 2,
+    }
+) if $man;
 
 # Simple Class for a File
 struct File => {
@@ -62,7 +66,7 @@ struct File => {
         return $ret if !$EVAL_ERROR;
 
         die "Cannot create MD5 sum of first 64kb of file $self: $!\n"
-            if $EVAL_ERROR;
+          if $EVAL_ERROR;
     }
     # Generate a MD5 hash for the complete file
     sub md5 {
@@ -82,7 +86,7 @@ struct File => {
         return $ret if !$EVAL_ERROR;
 
         die "Cannot create MD5 sum for the file $self: $!\n"
-            if $EVAL_ERROR;
+          if $EVAL_ERROR;
     }
 }
 
@@ -90,23 +94,26 @@ struct File => {
 my @files;
 
 # Find all Files and insert them into Container as File Objects.
-find({
-    no_chdir => 1,
-    wanted   => sub {
-        if ( -f $File::Find::name ) {
-            push @files, File->new(
-                name => decode('UTF-8', realpath($File::Find::name)),
-                size => -s $File::Find::name
-            )
-        }
+find(
+    {
+        no_chdir => 1,
+        wanted   => sub {
+            if ( -f $File::Find::name ) {
+                push @files,
+                  File->new(
+                    name => decode( 'UTF-8', realpath($File::Find::name) ),
+                    size => -s $File::Find::name
+                  );
+            }
+        },
     },
-}, @ARGV ? @ARGV : '.' );
-
+    @ARGV ? @ARGV : '.'
+);
 
 # save how often a file_size is seen.
 my %file_size;
-for my $file ( @files ) {
-    push @{$file_size{$file->size }}, $file;
+for my $file (@files) {
+    push @{ $file_size{ $file->size } }, $file;
 }
 
 # Save the amount of space that freed after delete
@@ -119,88 +126,88 @@ for my $files_aref ( values %file_size ) {
 
     # Generate a hash with 64kb files as key
     my %md5_64kb;
-    for my $file ( @files ) {
-        push @{$md5_64kb{$file->md5_64kb}}, $file;
+    for my $file (@files) {
+        push @{ $md5_64kb{ $file->md5_64kb } }, $file;
     }
 
-    MD5_64KB:
+  MD5_64KB:
     for my $files_aref ( values %md5_64kb ) {
         my @files = @$files_aref;
         next MD5_64KB if @files <= 1;
 
         # Generate a hash with the complete md5s
         my %md5;
-        for my $file ( @files ) {
-            push @{$md5{$file->md5}}, $file;
+        for my $file (@files) {
+            push @{ $md5{ $file->md5 } }, $file;
         }
 
         # Equal files
         for my $md5 ( keys %md5 ) {
-            my @files = @{$md5{$md5}};
+            my @files = @{ $md5{$md5} };
 
             # Delete
-            if ( $delete ) {
+            if ($delete) {
                 my $not_deleted = shift @files;
                 print "Original: $not_deleted\n";
-                for my $file ( @files ) {
+                for my $file (@files) {
                     if ( unlink $file->name ) {
                         print "Gelöscht: $file\n";
                         $total_size += $file->size;
                     }
                 }
             }
-	    # Ask
-	    elsif ( $ask ) {
-		my $inp;
-		my @inpa;
-	        print "MD5: $md5\n";
-		print "Welche Datei möchten sie Behallten? Bitte geben sie die nummer(n) an, getrennt durch ',' oder '0' um alle zu behalten.\n";
-		for (my $i = 1; $i <= @files; $i++){
-			print "$i: $files[$i-1]\n";
-		}
-		$inp = <STDIN>;
-		@inpa = split (/,/,$inp);
-		while (grep(/[^\d|\s]/,@inpa)){		# verify inputted characters
-			print "Next try! Please enter only numbers, ',' and whitespaces!\n";
-			$inp = <STDIN>;
-			@inpa = split (/,/,$inp);
-		}
-		@inpa = sort @inpa;
-		if ($inpa[0] == 0){			# delete nothing, if '0' was entered
-			print "Nichts gelöscht.\n";
-		}
-		else {					# delete!
-			print "Lösche diese Datei:\n";
-			my $status;
-			for (my $i=0; $i<@files; $i++ ) {
-				$status = 0;
-				for my $j (@inpa) {
-					$status = 1 if $j-1 == $i;
-				}
-				if ($status == 0) {
-					print "Gelöscht: ", $i+1, ": ", $files[$i], "\n" if (unlink $files[$i]->name);
-				}
-			}
-		}
-	    }
-            # Show
+            # Ask
+            elsif ($ask) {
+                my $inp;
+                my @inpa;
+                print "MD5: $md5\n";
+                print
+"Welche Datei möchten sie Behallten? Bitte geben sie die nummer(n) an, getrennt durch ',' oder '0' um alle zu behalten.\n";
+                for ( my $i = 1 ; $i <= @files ; $i++ ) {
+                    print "$i: $files[$i-1]\n";
+                }
+                $inp = <STDIN>;
+                @inpa = split( /,/, $inp );
+                while ( grep( /[^\d|\s]/, @inpa ) ) { # verify inputted characters
+                    print "Next try! Please enter only numbers, ',' and whitespaces!\n";
+                    $inp = <STDIN>;
+                    @inpa = split( /,/, $inp );
+                }
+                @inpa = sort @inpa;
+                if ( $inpa[0] == 0 ) {                # delete nothing, if '0' was entered
+                    print "Nichts gelöscht.\n";
+                }
+                else {                                # delete!
+                    print "Lösche diese Datei:\n";
+                    my $status;
+                    for ( my $i = 0 ; $i < @files ; $i++ ) {
+                        $status = 0;
+                        for my $j (@inpa) {
+                            $status = 1 if $j - 1 == $i;
+                        }
+                        if ( $status == 0 ) {
+                            print "Gelöscht: ", $i + 1, ": ", $files[$i], "\n" if ( unlink $files[$i]->name );
+                        }
+                    }
+                }
+            } ## end elsif ($ask)
+             # Show
             else {
                 print "MD5: $md5\n";
-                for my $file ( @files ) {
+                for my $file (@files) {
                     print "$file\n";
                 }
             }
 
             print "\n";
-        }
-    }
-}
+        } ## end for my $md5 ( keys %md5)
+    } ## end MD5_64KB: for my $files_aref ( values...)
+} ## end FILE_SIZE: for my $files_aref ( values...)
 
 $total_size = $total_size / 1024 / 1024;
-if ( $delete ) {
-        print "$total_size MiB more free.\n";
+if ($delete) {
+    print "$total_size MiB more free.\n";
 }
-} )
 
 __END__
 
