@@ -17,11 +17,17 @@ unless (@ARGV) {
 	@ARGV = qw(DateTime Perl::Critic::Bangs HTML::Parser);
 }
 
-my @install;
+my(@install_via_apt, @install_via_cpan);
 for my $module (@ARGV) {
 	if ( my $apt_package = $c->find_perl_module_package($module) ) {
-		say "$module: $apt_package";
-		push @install, $apt_package;
-	}
+            say "APT: $module: $apt_package";
+            push @install_via_apt, $apt_package;
+	} else {
+            say "CPAN: $module";
+            push @install_via_cpan, $module;
+        }
 }
-say "aptitude install @install" if @install;
+print "\n";
+
+say "aptitude install @install_via_apt" if @install_via_apt;
+say "cpan @install_via_cpan" if @install_via_cpan;

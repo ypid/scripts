@@ -11,7 +11,7 @@ use File::Copy;
 use Filesys::Df;
 ## cpan Filesys::Df
 const my $dev_label         => '8GB';
-const my $remain_blocks     => 100; ## How many MBs free space should remain
+const my $remain_blocks     => 1024 * 100; ## How many MBs free space should remain
 const my $source_path       => "$ENV{HOME}/change-podcast/podcasts";
 const my @filetypes         => qw( mp3 );
 const my $target_mount_path => "/media/$dev_label";
@@ -43,7 +43,7 @@ for my $pod_dir ( glob "$source_path/*" ) {
             if ( $pod_file =~ /.*\.$_\z/xms ) {
                 my $needed_blocks = -s $pod_file;
                 $needed_blocks /= 1024;
-                unless ( $free_blocks > $needed_blocks + $remain_blocks * 1024 ) {
+                if ( $free_blocks < $needed_blocks + $remain_blocks ) {
                     last PODDIR;
                 }
                 my $basefile    = basename $pod_file;
