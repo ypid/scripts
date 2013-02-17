@@ -1,17 +1,21 @@
 #!/bin/bash
-# @author Robin Schneider <ypid23@aol.de>
+## @author Robin Schneider <ypid23@aol.de>
+## @licence GPLv3+: GNU GPL version 3 or any later version, see http://www.fsf.org/licensing/licenses/gpl.html
 
 ## default config
 config_dir="$HOME/.xpodget"
 log_dir="$config_dir/Log/`date +%Y/%m`"
 config_file="$config_dir/xpodget.conf"
+rss_script="$config_dir/generate-rss-podcast-feed"
+rss_file_name="podcast.rss"
+local_podcast_feeds_file="$config_dir/local_podcast_feeds.html"
 
 ###
 help_exit (){ echo "„$0 --help“ to get more information"; exit $1; }
 if [ -z "$1" ];then echo "Missing parameter"; help_exit 1;fi
 ### Funktionen
 fail_parameter (){ echo "Wrong parameter: \"$1\""; help_exit 1; }
-display_version (){ echo "Version: 1.0"; }
+display_version (){ echo "Version: 1.1"; }
 display_shelp (){
 echo "Usage $0 [options]
 Options
@@ -21,7 +25,7 @@ Options
  -o, --mv-old			Moves familiar podcasts
  -u, --update			Updates the local podcast database
  -d, --download			Downloads new podcast episodes
- -g, --gen-rss			Generate RSS feeds for all directories. This requires the script gen-podcast.pl from the CPAN module MP3::Podcast
+ -g, --gen-rss			Generate RSS feeds for all directories. This requires the script generate-rss-podcast-feed and the CPAN module MP3::Podcast
  -a, --all			Equal to \"-o -u -d -g\"
  -h, --help			Shows this help text
  -v, --version  		Shows the version of this program"
@@ -35,14 +39,16 @@ fi
 
 mkdir -p "$config_dir"
 echo 'podcasts="$HOME/podcasts"
-podcasts_familiar="$HOME/podcasts_familiar"' > "$config_file"
+podcasts_familiar="$HOME/podcasts_familiar"
+rss_script="$config_dir/generate-rss-podcast-feed"
+base_url="http://domain.tld"	## if you want to distribute your podcasts in your intranet with RSS feeds' > "$config_file"
 }
 
 remove_empty_dirs (){
 find "$podcasts" "$podcasts_familiar" -type d -empty -delete
 for poddir in "$podcasts"/* "$podcasts_familiar"/*; do
-	if [ -e "$poddir/podcast.rss" ] && [ "`ls -1 $poddir|wc -l`" == 1 ]; then
-		rm "$poddir/podcast.rss"
+	if [ -e "$poddir/$rss_file_name" ] && [ "`ls -1 $poddir|wc -l`" == 1 ]; then
+		rm "$poddir/$rss_file_name"
 	fi
 done
 find "$podcasts" "$podcasts_familiar" -type d -empty -delete
@@ -121,12 +127,18 @@ then	HOME_old="$HOME"
 	export HOME="$HOME_old"
 fi
 
-if [ "$gen_rss" == 1 ]
-then	for poddir in "$podcasts"/* "$podcasts_familiar"/*
-	do	podname=${poddir##*/}		## name of the podcast
+if [ "$gen_rss" == 1 ]; then
+	rm -f "$local_podcast_feeds_file"
+	echo "<html><head><title>Podcast &Uuml;bersicht</title></head><body><h1>Podcast &Uuml;bersicht</h1><ul>" >> "$local_podcast_feeds_file"
+	for poddir in "$podcasts"/* "$podcasts_familiar"/*; do
+		podname=${poddir##*/}		## name of the podcast
 		podpath=${poddir%/*}		## like /home/podcast/podcasts
 		podserverdir=${podpath##*/}	## like podcasts_familiar
-		gen-podcast.pl "$podpath" "http://knuth.intra/$podserverdir" "$podname" > "$poddir/podcast.rss";done
+		$rss_script "$podpath" "http://knuth.intra/$podserverdir" "$podname" > "$poddir/$rss_file_name"
+		echo "<li><a href=\"$base_url/$podserverdir/$podname/$rss_file_name\" alt=\"$podname\">" >> "$local_podcast_feeds_file"
+		echo "$base_url/$podserverdir/$podname/$rss_file_name</a></li>" >> "$local_podcast_feeds_file"
+	done
+	echo "</body></html>" >> "$local_podcast_feeds_file"
 fi
 
 ) |	if [ "$cron" == 1 ]

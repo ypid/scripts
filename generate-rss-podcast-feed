@@ -1,0 +1,23 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use autodie;
+# use feature qw(say);
+use utf8;
+binmode STDOUT, ':encoding(UTF-8)';
+
+use MP3::Podcast;
+
+## #Generates a podcast from directories handled in the command line
+my $dirbase = shift || die "Base dir missing\n";
+my $urlbase = shift || die "Base URL missing\n";
+my $dir = shift || die "Dir to scan missing\n";
+my $title = $dir;
+my $creator = "xpodget with MP3::Podcast";
+my $description = $title;
+my $sort = 1;
+
+my $pod = MP3::Podcast->new($dirbase,$urlbase);
+my $rss = $pod->podcast( $dir, $title, $creator, $description, $sort );
+
+print $rss->as_string;
