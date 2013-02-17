@@ -1,0 +1,21 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use utf8;
+use feature qw(say);
+binmode STDOUT, ':encoding(UTF-8)';
+
+my $HOME              = $ENV{'HOME'};
+my $podcasts          = "$HOME/podcasts";
+my $podcasts_familiar = "$HOME/podcasts_familiar";
+push @ARGV, qw( /var/log/nginx/access.log /var/log/nginx/access.log.1 ) unless @ARGV;
+while (<>) {
+    next unless m#podcasts/.*mp3.*Nokia#xms;
+    my ( $podname, $file ) = ( split /\//xms, (split)[6] )[ -2, -1 ];
+    my $cur_path = "$podcasts/$podname/$file";
+    if ( -e $cur_path ) {
+        say "$cur_path -> $podcasts_familiar/$podname";
+        mkdir "$podcasts/$podname";
+        rename $cur_path, "$podcasts_familiar/$podname";
+    }
+}
