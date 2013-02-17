@@ -8,14 +8,15 @@ log_dir="$config_dir/Log/`date +%Y/%m`"
 config_file="$config_dir/xpodget.conf"
 rss_script="$config_dir/generate-rss-podcast-feed"
 rss_file_name="podcast.rss"
-local_podcast_feeds_file="$config_dir/local_podcast_feeds.html"
+local_podcast_feed_overview="$config_dir/overview.html"
+local_podcast_feed_opml="$config_dir/overview.opml"
 
 ###
 help_exit (){ echo "„$0 --help“ to get more information"; exit $1; }
 if [ -z "$1" ];then echo "Missing parameter"; help_exit 1;fi
 ### Funktionen
 fail_parameter (){ echo "Wrong parameter: \"$1\""; help_exit 1; }
-display_version (){ echo "Version: 1.1"; }
+display_version (){ echo "Version: 1.2"; }
 display_shelp (){
 echo "Usage $0 [options]
 Options
@@ -128,17 +129,21 @@ then	HOME_old="$HOME"
 fi
 
 if [ "$gen_rss" == 1 ]; then
-	rm -f "$local_podcast_feeds_file"
-	echo "<html><head><title>Podcast &Uuml;bersicht</title></head><body><h1>Podcast &Uuml;bersicht</h1><ul>" >> "$local_podcast_feeds_file"
+	rm -f "$local_podcast_feed_overview" "$local_podcast_feed_opml"
+	echo "<html><head><title>Podcast overview</title></head><body><h1>Podcast overview</h1><ul>" >> "$local_podcast_feed_overview"
+	echo '<?xml version="1.0" encoding="utf-8"?><opml version="1.1"><head><title>Podcast overview</title></head><body>' >> "$local_podcast_feed_opml"
 	for poddir in "$podcasts"/* "$podcasts_familiar"/*; do
 		podname=${poddir##*/}		## name of the podcast
 		podpath=${poddir%/*}		## like /home/podcast/podcasts
 		podserverdir=${podpath##*/}	## like podcasts_familiar
-		$rss_script "$podpath" "http://knuth.intra/$podserverdir" "$podname" > "$poddir/$rss_file_name"
-		echo "<li><a href=\"$base_url/$podserverdir/$podname/$rss_file_name\" alt=\"$podname\">" >> "$local_podcast_feeds_file"
-		echo "$base_url/$podserverdir/$podname/$rss_file_name</a></li>" >> "$local_podcast_feeds_file"
+		url="$base_url/$podserverdir/$podname/$rss_file_name"
+		# $rss_script "$podpath" "$base_url/$podserverdir" "$podname" > "$poddir/$rss_file_name"
+		echo "<li><a href=\"$url\" alt=\"$podname\">" >> "$local_podcast_feed_overview"
+		echo "$url</a></li>" >> "$local_podcast_feed_overview"
+		echo "<outline title=\"$podname\" text=\"$podserverdir: $podname\" type=\"rss\" xmlUrl=\"$url\" />" >> "$local_podcast_feed_opml"
 	done
-	echo "</body></html>" >> "$local_podcast_feeds_file"
+	echo "</body></html>" >> "$local_podcast_feed_overview"
+	echo "</body></opml>" >> "$local_podcast_feed_opml"
 fi
 
 ) |	if [ "$cron" == 1 ]
