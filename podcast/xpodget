@@ -17,7 +17,7 @@ help_exit (){ echo "„$0 --help“ to get more information"; exit $1; }
 if [ -z "$1" ];then echo "Missing parameter"; help_exit 1;fi
 ### Funktionen
 fail_parameter (){ echo "Wrong parameter: \"$1\""; help_exit 1; }
-display_version (){ echo "Version: 1.3"; }
+display_version (){ echo "Version: 1.3.1"; }
 display_shelp (){
 echo "Usage $0 [options]
 Options
@@ -68,7 +68,7 @@ do	case $1 in
 	-w | --web-server-log	) remove_empty_dirs=1;mv_old_web=1				; shift		;;
 	-u | --update		) update=1							; shift		;;
 	-d | --download		) download=1							; shift		;;
-	-g | --gen-rss		) gen_rss=1							; shift		;;
+	-g | --gen-rss		) remove_empty_dirs=1;mv_old=1;gen_rss=1							; shift		;;
 	-a | --all		) update=1;download=1;remove_empty_dirs=1;mv_old=1;
 				mv_old_web=1;gen_rss=1						; shift		;;
 	-v | --version		) display_version						; exit 0	;;
@@ -143,9 +143,9 @@ if [ "$gen_rss" == 1 ]; then
 		podpath=${poddir%/*}		## like /home/podcast/podcasts
 		podserverdir=${podpath##*/}	## like podcasts_familiar
 		url="$base_url/$podserverdir/$podname/$rss_file_name"
-		# $rss_script "$podpath" "$base_url/$podserverdir" "$podname" > "$poddir/$rss_file_name"
+		$rss_script "$podpath" "$base_url/$podserverdir" "$podname" "$podname ($podserverdir)" > "$poddir/$rss_file_name"
 		echo "<li><a href=\"$url\" alt=\"$podname\">" >> "$local_podcast_feed_overview"
-		echo "$url</a></li>" >> "$local_podcast_feed_overview"
+		echo "$podname ($podserverdir)</a></li>" >> "$local_podcast_feed_overview"
 		echo "<outline title=\"$podname\" text=\"$podserverdir: $podname\" type=\"rss\" xmlUrl=\"$url\" />" >> "$local_podcast_feed_opml"
 	done
 	echo "</body></html>" >> "$local_podcast_feed_overview"

@@ -12,7 +12,7 @@ use MP3::Podcast;
 my $dirbase = shift || die "Base dir missing\n";
 my $urlbase = shift || die "Base URL missing\n";
 my $dir = shift || die "Dir to scan missing\n";
-my $title = $dir;
+my $title = shift || $dir;
 my $creator = "xpodget with MP3::Podcast";
 my $description = $title;
 my $sort = 1;
