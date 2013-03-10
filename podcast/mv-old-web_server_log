@@ -13,10 +13,11 @@ push @ARGV, qw( /var/log/nginx/access.log /var/log/nginx/access.log.1 ) unless @
 while (<>) {
     next unless m#podcasts/.*mp3.*Nokia#xms;
     my ( $podname, $file ) = ( split /\//xms, (split)[6] )[ -2, -1 ];
-    my $cur_path = "$podcasts/$podname/$file";
-    if ( -e $cur_path ) {
-        say "$cur_path -> $podcasts_familiar/$podname";
-        mkdir "$podcasts/$podname";
-        rename $cur_path, "$podcasts_familiar/$podname";
+    my $cur_file = "$podcasts/$podname/$file";
+    if ( -e $cur_file ) {
+        my $new_pod_dir = "$podcasts_familiar/$podname";
+        say "$cur_file -> $new_pod_dir/$file";
+        mkdir $new_pod_dir ;
+        rename $cur_file, "$podcasts_familiar/$podname/$file";
     }
 }

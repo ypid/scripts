@@ -98,10 +98,6 @@ if [ "$podcasts_familiar" == "" ]; then
 	exit 1
 fi
 
-if [ "$remove_empty_dirs" == 1 ]; then	
-	remove_empty_dirs
-fi
-
 if [ "$mv_old" == 1 ]; then	
 	find "$podcasts" -type d -name "familiar" -not -empty|while read dir
 	do	casttitle=${dir#$podcasts/}
@@ -109,13 +105,17 @@ if [ "$mv_old" == 1 ]; then
 		mkdir -p "$podcasts_familiar/$casttitle"
 		mv -nv "$dir"/* "$podcasts_familiar/$casttitle"
 	done
-	ls -1 "$podcasts"|while read dir
-	do	mkdir -p "$podcasts/$dir/familiar"
-	done
 fi
 
 if [ "$mv_old_web" == 1 ]; then	
 	$web_server_log_script
+fi
+
+if [ "$remove_empty_dirs" == 1 ]; then	
+	remove_empty_dirs
+	ls -1 "$podcasts"|while read dir; do
+		mkdir -p "$podcasts/$dir/familiar"
+	done
 fi
 
 if [ "$update" == 1 ]; then	
