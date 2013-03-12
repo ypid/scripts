@@ -7,6 +7,8 @@ fi
 find . -name '.git'|while read gitdir
 do	dir=${gitdir%.git}
 	pushd "$dir"
-	git "$1"
+	echo "Executing: $@"
+	$@
 	popd >/dev/null
+	echo -e "\n"
 done
