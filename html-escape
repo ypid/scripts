@@ -1,0 +1,27 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use autodie;
+use feature qw(say);
+use utf8;
+use open qw(:std :utf8);
+binmode STDOUT, ':encoding(UTF-8)';
+
+my %lookup = (
+    'ü' => '&uuml;',
+    'Ü' => '&Uuml;',
+    'ä' => '&auml;',
+    'Ä' => '&Auml;',
+    'ö' => '&ouml;',
+    'Ö' => '&Ouml;',
+);
+
+while (<>) {
+    for my $c (split(//, $_)) {
+        if (exists $lookup{$c}) {
+            print $lookup{$c}
+        } else {
+            print $c;
+        }
+    }
+}
