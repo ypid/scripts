@@ -14,14 +14,28 @@ my %lookup = (
     'Ä' => '&Auml;',
     'ö' => '&ouml;',
     'Ö' => '&Ouml;',
+    'ß' => '&szlig;',
 );
 
+my $reverse = 0;
+if ($ARGV[0] eq '-r') {
+    shift @ARGV;
+    $reverse = 1;
+}
+
 while (<>) {
-    for my $c (split(//, $_)) {
-        if (exists $lookup{$c}) {
-            print $lookup{$c}
-        } else {
-            print $c;
+    if ($reverse) {
+        for my $key (keys %lookup) {
+            s/$lookup{$key}/$key/g;
+        }
+        print;
+    } else {
+        for my $c (split(//, $_)) {
+            if (exists $lookup{$c}) {
+                print $lookup{$c}
+            } else {
+                print $c;
+            }
         }
     }
 }

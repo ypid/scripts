@@ -5,6 +5,7 @@ use autodie;
 use feature qw(say);
 use utf8;
 binmode STDOUT, ':encoding(UTF-8)';
+use File::Path;
 
 my $HOME              = $ENV{'HOME'};
 my $podcasts          = "$HOME/podcasts";
@@ -17,7 +18,7 @@ while (<>) {
     if ( -e $cur_file ) {
         my $new_pod_dir = "$podcasts_familiar/$podname";
         say "$cur_file -> $new_pod_dir/$file";
-        mkdir $new_pod_dir ;
+        mkpath $new_pod_dir;
         rename $cur_file, "$podcasts_familiar/$podname/$file";
     }
 }
