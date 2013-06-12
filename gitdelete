@@ -1,5 +1,0 @@
-#!/bin/bash
-git status|grep deleted|while read i; do git rm -f "`echo "$i"|sed 's/^#\tdeleted:    //'`";done
-
-## Known BUGS
-## If a file is already deleted with this command for example and you apply this script a second time then this script will fail. This could be fixed by parsing the colored output from git status.

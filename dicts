@@ -1,5 +1,5 @@
 #!/bin/bash
-source ~/.bash_public
+source ~/.shell_public
 shopt -s expand_aliases
 
 dict $@ |less
