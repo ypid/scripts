@@ -1,0 +1,110 @@
+#!/usr/bin/env python
+# encoding: utf-8
+# Implementation of the work flow explained here: http://superuser.com/a/717689
+# In short: Uses the database from cdcat to copy wanted files.
+
+# modules {{{
+import gzip, os, sys, logging
+import xml.etree.ElementTree as ET
+custom_sep = os.path.sep
+# custom_sep = '\\'
+logging.basicConfig(
+    format='%(levelname)s: %(message)s',
+    # level=logging.DEBUG,
+    level=logging.INFO,
+    )
+# }}}
+
+# helper functions {{{
+def copy_node(node):
+    category = node.find('category')
+    if category is not None:
+        is_number = True
+        try:
+            i = int(category.text)
+        except ValueError:
+            is_number = False
+        return is_number
+    else:
+        return None
+
+def get_path(cur_path, node):
+    return custom_sep.join([cur_path, node.attrib['name']])
+# }}}
+
+# generate copy script entry for node {{{
+def add_to_copy_list(cur_path, unwanted, node_type, generate_scripts):
+    # cur_path can be directory path or file path
+    unwanted = [item for item in unwanted if item is not None]
+    logging.debug(u'Include %s %s' % (node_type, cur_path))
+    if 'git-annex' in generate_scripts:
+        unwanted = ['--exclude=\'%s\'' % item for item in unwanted]
+        print 'git annex get "%s" %s' % (cur_path, ' '.join(unwanted))
+# }}}
+
+# for file {{{
+def for_file(file_node, cur_path, implicit_wanted_node, generate_scripts):
+    file_path = get_path(cur_path, file_node)
+
+    explicit_wanted_node = copy_node(file_node)
+    wanted_node = explicit_wanted_node if explicit_wanted_node is not None else implicit_wanted_node
+
+    if wanted_node is False:
+        # if explicit_wanted_node is False and implicit_wanted_node is True:
+        #     return file_path
+        logging.debug(u'Not file %s' % file_path)
+        return file_path
+    elif wanted_node is True:
+        if explicit_wanted_node is True and implicit_wanted_node is not True:
+            add_to_copy_list(file_path, [], 'file', generate_scripts)
+        else:
+            # File is already included from a upper directory.
+            return None
+# }}}
+
+# for dir {{{
+def for_dir(dir_node, cur_path, implicit_wanted_node, generate_scripts):
+    cur_path = get_path(cur_path, dir_node)
+    explicit_wanted_node = copy_node(dir_node)
+    if implicit_wanted_node is False and explicit_wanted_node is not True:
+        logging.debug(u'Not dir %s (excluded from upper dir)' % cur_path)
+        return cur_path
+
+    wanted_node = explicit_wanted_node if explicit_wanted_node is not None else implicit_wanted_node
+    unwanted = []
+    for directory_node in dir_node.findall('directory'):
+        unwanted.append(for_dir(directory_node, cur_path, wanted_node, generate_scripts))
+    for file_node in dir_node.findall('file'):
+        unwanted.append(for_file(file_node, cur_path, wanted_node, generate_scripts))
+    if wanted_node is True:
+        add_to_copy_list(cur_path, unwanted, 'dir', generate_scripts)
+    if explicit_wanted_node is False:
+        return cur_path
+# }}}
+
+# main {{{
+def main(catalog_file, base_path):
+    generate_scripts = [ 'git-annex' ]
+
+    # tree = ET.parse('test.hcf.unp')
+    f = gzip.open(catalog_file, 'rb')
+    tree = ET.ElementTree(ET.fromstring(f.read()))
+    f.close()
+    catalog = tree.getroot()
+
+    logging.info(u'Parsing catalog called "%s" owned by "%s" …' % (catalog.attrib['name'], catalog.attrib['owner']))
+    for media in catalog.findall('media'):
+        logging.info(u'Parsing media: %s' % media.attrib['name'])
+        for_dir(media, base_path, None, generate_scripts)
+
+if __name__ == '__main__':
+    if len(sys.argv) > 2:
+        catalog_file = sys.argv[1]
+        base_path = sys.argv[2]
+    else:
+        logging.error('Not enough parameters.'
+                + ' 1. File path to catalog file.'
+                + ' 2. Base path for the media.')
+        sys.exit(1)
+    main(catalog_file, base_path)
+# }}}
