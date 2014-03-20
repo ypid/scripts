@@ -12,7 +12,7 @@ import xml.etree.ElementTree as ET
 # }}}
 
 # module wide variables {{{
-SCRIPT_URL = 'https://github.com/ypid/scripts/blob/master/cdcat-parser/cdcat-parser'
+SCRIPT_URL = 'https://github.com/ypid/scripts/blob/master/cdcat-parser/cdcat-parser.py'
 # }}}
 
 class CdcatDatabase: # {{{
