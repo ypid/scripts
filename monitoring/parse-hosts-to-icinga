@@ -1,0 +1,40 @@
+#!/usr/bin/env perl
+# Generates a Icinga host definition for each host in a hosts file.
+# @author Robin Schneider <ypid23@aol.de>
+# @licence GPLv3+ <http://www.gnu.org/licenses/gpl.html>
+use strict;              # name space for variables
+use warnings;            # enable warnings
+use autodie;             # die if error
+use feature qw(say);     # use 'say' (just a print with trailing "\n")
+use utf8;                # utf8 source code
+use open qw(:std :utf8); # open in utf8
+binmode STDOUT, ':encoding(UTF-8)'; # output in utf8
+
+my %hash; # declare hash (key => value data type)
+while (<>) { # go through each line of the input (either in STDIN or
+             # the files in the argument list)
+    if (/\.sw/xms) { # only consider lines that have a '.sw' in them
+        chomp;       # remove trailing "\n"
+        my ( $ip, $host ) = split / /ms; # split line by space
+        # say "$ip $host";
+        $hash{$ip} = $host;
+            # Append the ip as key and the hostname as value.
+            # Some groups have more than one domain name
+            # in these cases the last domain name will be used in the
+            # monitoring.
+    }
+}
+
+# Now that the file is read entirely we can format and output it
+# properly.
+for ( keys %hash ) { # go through all keys in %hash the key can be
+                     # accessed through the special variable $_
+    say 'define host{';
+    say '  use generic-host';
+    say "  host_name $hash{$_}"; # $host{$_} is the hostname
+    say "  alias $hash{$_}";
+    say "  address $_"; # $_ is the ip address
+        # Icinga does not require the ip address. I only included it
+        # to show up in the web interface.
+    say '}';
+}
