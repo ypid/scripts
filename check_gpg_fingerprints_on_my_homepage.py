@@ -16,24 +16,23 @@
 '''Check the GPG fingerprints on my homepage if there are the correct ones.'''
 
 # modules {{{
-import re, sys
+import re
 import subprocess
 import logging
 import codecs
 from HTMLParser import HTMLParser
 import urllib2
-from termcolor import colored
 # }}}
 
 logging.basicConfig(
     format='%(levelname)s: %(message)s',
-    level=logging.DEBUG,
-    # level=logging.INFO,
+    # level=logging.DEBUG,
+    level=logging.INFO,
 )
 
 PAGES_WITH_GPG_KEYS = {
-    'blog': 'ypid.wordpress.com/uber-mich',
-    'osm-wiki': 'wiki.openstreetmap.org/wiki/User:Ypid'
+    'blog':      'ypid.wordpress.com/uber-mich',
+    'osm-wiki':  'wiki.openstreetmap.org/wiki/User:Ypid'
         }
 PROTOCOLS=[ 'http', 'https' ]
 gpg_list_keys_command = [ 'gpg', '--list-public-keys', '--fingerprint', 'Robin Schneider (Automatic Signing Key) <ypid23@aol.de>', 'Robin Schneider (Release Signing Key) <ypid23@aol.de>', 'Robin `ypid` Schneider <ypid23@aol.de>' ]
@@ -59,16 +58,17 @@ def sort_string_lines(string):
 ## }}}
 
 ## get trusted fingerprints from my machine {{{
-gpg_public_keys_from_my_machine = u''
+def get_public_keys_from_machine():
+    gpg_public_keys_from_my_machine = u''
 
-process = subprocess.Popen(gpg_list_keys_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-while True:
-    out = process.stdout.read(1)
-    if out == '' and process.poll() != None:
-        break
-    if out != '':
-        gpg_public_keys_from_my_machine += out.encode('utf-8')
-gpg_public_keys_from_my_machine_array = [make_clean(line, False) for line in sort_string_lines(gpg_public_keys_from_my_machine)]
+    process = subprocess.Popen(gpg_list_keys_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    while True:
+        out = process.stdout.read(1)
+        if out == '' and process.poll() != None:
+            break
+        if out != '':
+            gpg_public_keys_from_my_machine += out.encode('utf-8')
+    return [make_clean(line, False) for line in sort_string_lines(gpg_public_keys_from_my_machine)]
 ## }}}
 
 ## HTML parser {{{
@@ -87,7 +87,7 @@ class MyHTMLParser(HTMLParser):
            self.pre_data = data
 ## }}}
 
-def compate_with_html_page(html):
+def compate_with_html_page(html): ## {{{
     number_ok = 0
     parser = MyHTMLParser()
     parser.feed(make_clean(html, True))
@@ -116,21 +116,31 @@ def compate_with_html_page(html):
                 )
             )
         else:
+            logging.debug('Testing line: %s' % trusted_line)
             number_ok += 1
     logging.info('%d lines are equal out of %d' % (number_ok, max_len))
     return max_len - number_ok
+# }}}
 
-lines_not_matching = 0
-# with codecs.open('/tmp/tmp.tyUKNB362M/blog.http.html', 'r', 'UTF-8') as content_file:
-with codecs.open('/tmp/web', 'r', 'UTF-8') as content_file:
-    content = content_file.read()
-    lines_not_matching += compate_with_html_page(content)
+# main {{{
+if __name__ == '__main__':
+    gpg_public_keys_from_my_machine_array = get_public_keys_from_machine()
 
-for proto in PROTOCOLS:
-    for page_name in PAGES_WITH_GPG_KEYS:
-        url='%s://%s' % (proto, PAGES_WITH_GPG_KEYS[page_name])
-        # content = urllib2.urlopen(url).read().decode('utf-8')
-        # print type(content)
-        # compate_with_html_page(content)
-        break
-    break
+    lines_not_matching = 0
+    # with codecs.open('/tmp/tmp.tyUKNB362M/blog.http.html', 'r', 'UTF-8') as content_file:
+    with codecs.open('/tmp/web', 'r', 'UTF-8') as content_file:
+        content = content_file.read()
+        lines_not_matching += compate_with_html_page(content)
+
+    for proto in PROTOCOLS:
+        for page_name in PAGES_WITH_GPG_KEYS:
+            url='%s://%s' % (proto, PAGES_WITH_GPG_KEYS[page_name])
+            logging.info('Checking page: %s' % url)
+            # content = urllib2.urlopen(url).read().decode('utf-8')
+            # lines_not_matching += compate_with_html_page(content)
+
+    if lines_not_matching == 0:
+        logging.info('Everything seems to be ok.')
+    else:
+        logging.warning('%d lines did not match …' % lines_not_matching)
+# }}}
