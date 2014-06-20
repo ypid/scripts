@@ -1,0 +1,33 @@
+#!/bin/bash
+## Check the gpg fingerprints on my homepage if there are the correct ones.
+## @author Robin Schneider <ypid23@aol.de>
+## @licence GPLv3 <http://www.gnu.org/licenses/gpl.html>
+## This program is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation version 3 of the License.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+TDIR=`mktemp -d`
+# TDIR=/tmp/tmp.KEH1RTXywh
+
+PAGE_WITH_GPG_KEYS='ypid.wordpress.com/uber-mich'
+
+saved_pages=()
+index=-1
+for proto in http https; do
+    saved_pages[((++index))]="$TDIR/$proto.about"
+    wget "$proto://$PAGE_WITH_GPG_KEYS" -O "${saved_pages[$index]}"
+done
+
+gpg --list-public-keys --fingerprint ypid | grep --invert-match '^$'| while read line; do
+    # line="$(echo $line | sed 's/^uid\s//')"
+    grep --line-number --fixed-strings "$line" "${saved_pages[@]}" \
+        | sed --regexp-extended 's/^.*\/(https?)\.about:([0-9]+):/\1 \2 /'
+done | sort --numeric-sort --key=1 # --key=2

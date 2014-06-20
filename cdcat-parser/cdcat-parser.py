@@ -9,6 +9,7 @@
 # modules {{{
 import gzip, os, sys, logging
 import xml.etree.ElementTree as ET
+import argparse
 # }}}
 
 # module wide variables {{{
