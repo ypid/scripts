@@ -15,10 +15,12 @@ my %lookup = (
     'ö' => '&ouml;',
     'Ö' => '&Ouml;',
     'ß' => '&szlig;',
+    '>' => '&gt;',
+    '<' => '&lt;',
 );
 
 my $reverse = 0;
-if ($ARGV[0] eq '-r') {
+if (defined $ARGV[0] and $ARGV[0] eq '-r') {
     shift @ARGV;
     $reverse = 1;
 }

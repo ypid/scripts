@@ -1,5 +1,5 @@
 #!/bin/bash
-## Check the gpg fingerprints on my homepage if there are the correct ones.
+## Check the GPG fingerprints on my homepage if there are the correct ones.
 ## @author Robin Schneider <ypid23@aol.de>
 ## @licence GPLv3 <http://www.gnu.org/licenses/gpl.html>
 ## This program is free software: you can redistribute it and/or modify
@@ -15,19 +15,30 @@
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 TDIR=`mktemp -d`
-# TDIR=/tmp/tmp.KEH1RTXywh
+TDIR=/tmp/tmp.tyUKNB362M
 
-PAGE_WITH_GPG_KEYS='ypid.wordpress.com/uber-mich'
+declare -A PAGES_WITH_GPG_KEYS=( ['blog']='ypid.wordpress.com/uber-mich' ['osm-wiki']='wiki.openstreetmap.org/wiki/User:Ypid')
+declare -a PROTOCOLS=( http https )
 
 saved_pages=()
-index=-1
-for proto in http https; do
-    saved_pages[((++index))]="$TDIR/$proto.about"
-    wget "$proto://$PAGE_WITH_GPG_KEYS" -O "${saved_pages[$index]}"
+index=0
+for proto in ${PROTOCOLS[@]}; do
+    for page_name in ${!PAGES_WITH_GPG_KEYS[@]}; do
+        ((index++))
+        saved_pages[$index]="$TDIR/$page_name.$proto.html"
+        # wget "$proto://${PAGES_WITH_GPG_KEYS["$page_name"]}" -O "${saved_pages[$index]}"
+    done
 done
 
 gpg --list-public-keys --fingerprint ypid | grep --invert-match '^$'| while read line; do
     # line="$(echo $line | sed 's/^uid\s//')"
-    grep --line-number --fixed-strings "$line" "${saved_pages[@]}" \
-        | sed --regexp-extended 's/^.*\/(https?)\.about:([0-9]+):/\1 \2 /'
-done | sort --numeric-sort --key=1 # --key=2
+    output="`grep --line-number --fixed-strings "$line" "${saved_pages[@]}" \
+        | sed --regexp-extended 's/^\/tmp\/[^ ]*\///'`"
+    lines="`echo -n "$output" | wc -l`" # counts newlines
+    lines_should=$((${#PROTOCOLS[@]} * ${#PAGES_WITH_GPG_KEYS[@]} -1))
+    echo "$output"
+    if [[ "$lines" != "$lines_should" ]] && ! echo "$line" |grep '^uid'; then
+        # uid checking does not work on my blog …
+        echo -e "\e[31mLine $line not found …\e[0m"
+    fi
+done | grep -v '^$' | sort --numeric-sort --key=1 # --key=2 
