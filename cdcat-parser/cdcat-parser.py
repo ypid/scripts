@@ -3,13 +3,14 @@
 # @author Robin Schneider <ypid23@aol.de>
 # @licence GPLv3 <http://www.gnu.org/licenses/gpl.html>
 #
-# Implementation of the work flow explained here: http://superuser.com/a/717689
-# In short: Uses the database from cdcat to copy wanted files.
+"""
+Implementation of the work flow explained here: http://superuser.com/a/717689
+In short: Uses the database from cdcat to copy wanted files.
+"""
 
 # modules {{{
 import gzip, os, sys, logging
 import xml.etree.ElementTree as ET
-import argparse
 # }}}
 
 # module wide variables {{{
@@ -274,19 +275,29 @@ def main(catalog_file): # {{{
     # cdcat_db_object.parse_gzip_file(catalog_file, generate_formats=[ 'git-annex' ])
 
 if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Uses the database from cdcat to copy wanted files.",
+        epilog="Implementation of the work flow explained here: http://superuser.com/a/717689",
+    )
+    parser.add_argument('-f', '--file', required=True, help='cdcat database file')
+    parser.add_argument('-t', '--type')
+    parser.parse_args()
+
     logging.basicConfig(
         format='# %(levelname)s: %(message)s',
         # level=logging.DEBUG,
         level=logging.INFO,
         )
-    logging.info(u'Running cdcat-parser: %s' % SCRIPT_URL)
-    if len(sys.argv) > 1:
-        catalog_file = sys.argv[1]
-    else:
-        raise SystemExit(
-            'Not enough parameters.'
-            + ' 1. File path to catalog file.'
-            + ' The copy scripts will be named after the catalog filename with different suffixes.'
-            )
-    main(catalog_file)
+    # logging.info(u'Running cdcat-parser: %s' % SCRIPT_URL)
+    # if len(sys.argv) > 1:
+        # catalog_file = sys.argv[1]
+    # else:
+        # raise SystemExit(
+            # 'Not enough parameters.'
+            # + ' 1. File path to catalog file.'
+            # + ' The copy scripts will be named after the catalog filename with different suffixes.'
+            # )
+    # main(catalog_file)
 # }}}
