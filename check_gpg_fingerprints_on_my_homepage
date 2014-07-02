@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 # encoding: utf-8
-## @author Robin Schneider <ypid23@aol.de>
-## @licence GPLv3 <http://www.gnu.org/licenses/gpl.html>
-## This program is free software: you can redistribute it and/or modify
-## it under the terms of the GNU General Public License as published by
-## the Free Software Foundation version 3 of the License.
-##
-## This program is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-##
-## You should have received a copy of the GNU General Public License
-## along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# @author Robin Schneider <ypid23@aol.de>
+# @licence GPLv3 <http://www.gnu.org/licenses/gpl.html>
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation version 3 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''Check the GPG fingerprints on my homepage if there are the correct ones.'''
 
 # modules {{{
@@ -30,18 +30,18 @@ logging.basicConfig(
 )
 
 PAGES_WITH_GPG_KEYS = {
-    'blog':      'ypid.wordpress.com/uber-mich',
-    'osm-wiki':  'wiki.openstreetmap.org/wiki/User:Ypid'
-    }
+    'blog': 'ypid.wordpress.com/uber-mich',
+    'osm-wiki': 'wiki.openstreetmap.org/wiki/User:Ypid'
+}
 PROTOCOLS = ['http', 'https']
 GPG_LIST_KEYS_COMMAND = [
     'gpg', '--list-public-keys', '--fingerprint',
     'Robin Schneider (Automatic Signing Key) <ypid23@aol.de>',
     'Robin Schneider (Release Signing Key) <ypid23@aol.de>',
     'Robin `ypid` Schneider <ypid23@aol.de>'
-    ]
+]
 
-## helper functions {{{
+# helper functions {{{
 def make_clean(string, is_html):
     '''Workaround for HTMLParser.
 
@@ -54,9 +54,11 @@ def make_clean(string, is_html):
     else:
         return string.replace('<', '**EmailStart**').replace('>', '**EmailEnd**')
 
+
 def reverse_clean(string):
     '''Workaround for HTMLParser.'''
     return string.replace('**EmailStart**', '<').replace('**EmailEnd**', '>')
+
 
 def sort_string_lines(string):
     '''Split string by newline, strip whitespace and return the sorted array.'''
@@ -66,9 +68,9 @@ def sort_string_lines(string):
         if line != '':
             array_of_lines.append(line.strip())
     return sorted(array_of_lines)
-## }}}
+# }}}
 
-## get trusted fingerprints from my machine {{{
+# get trusted fingerprints from my machine {{{
 def get_public_keys_from_machine():
     '''Get the local list of public GPG keys to compare with the remote ones.'''
     gpg_public_keys_from_my_machine = u''
@@ -77,17 +79,16 @@ def get_public_keys_from_machine():
         GPG_LIST_KEYS_COMMAND,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
-        )
+    )
     while True:
         out = process.stdout.read(1)
-        if out == '' and process.poll() != None:
+        if out == '' and process.poll() is not None:
             break
         if out != '':
             gpg_public_keys_from_my_machine += out.encode('utf-8')
     return [make_clean(line, False) for line in sort_string_lines(gpg_public_keys_from_my_machine)]
-## }}}
+# }}}
 
-## HTML parser {{{
 class MyHTMLParser(HTMLParser):
     _in_pre = False
     pre_data = ''
@@ -95,15 +96,18 @@ class MyHTMLParser(HTMLParser):
     def handle_starttag(self, tag, attrs):
         if tag == 'pre':
             self._in_pre = True
+
     def handle_endtag(self, tag):
         if tag == 'pre':
             self._in_pre = False
+
     def handle_data(self, data):
         if self._in_pre:
             self.pre_data = data
-## }}}
+# }}}
 
-def compate_with_html_page(html): ## {{{
+
+def compate_with_html_page(html):  # {{{
     number_ok = 0
     parser = MyHTMLParser()
     parser.feed(make_clean(html, True))
@@ -112,26 +116,34 @@ def compate_with_html_page(html): ## {{{
     max_len = max(
         len(gpg_public_keys_from_web_pages_array),
         len(gpg_public_keys_from_my_machine_array)
-        )
+    )
 
-    len_equal = len(gpg_public_keys_from_web_pages_array) == len(gpg_public_keys_from_my_machine_array)
+    len_equal = len(
+        gpg_public_keys_from_web_pages_array) == len(
+        gpg_public_keys_from_my_machine_array)
 
     if not len_equal:
-        logging.warning('Lengths for the trusted lines and the lines form the web differ (max %d).', max_len)
+        logging.warning(
+            'Lengths for the trusted lines and the lines form the web differ (max %d).',
+            max_len)
 
     for idx in range(max_len):
         trusted_line = gpg_public_keys_from_my_machine_array[idx]
 
-        if trusted_line == None:
-            if trusted_line != None:
-                logging.warning('Line available locally but not upstream: %s', trusted_line)
+        if trusted_line is None:
+            if trusted_line is not None:
+                logging.warning(
+                    'Line available locally but not upstream: %s',
+                    trusted_line)
         elif trusted_line not in gpg_public_keys_from_web_pages_array:
             logging.error(
                 '%s\n%s%s',
                 'String at line %d was not found remotely:' % idx,
                 '\tExpected: "%s"' % reverse_clean(trusted_line),
-                '\n\tGot:      "%s"' % reverse_clean(gpg_public_keys_from_web_pages_array[idx]) if len_equal else ''
-                )
+                '\n\tGot:      "%s"' % reverse_clean(
+                    gpg_public_keys_from_web_pages_array[
+                        idx]) if len_equal else ''
+            )
         else:
             logging.debug('Testing line: %s', trusted_line)
             number_ok += 1
@@ -144,10 +156,10 @@ if __name__ == '__main__':
     gpg_public_keys_from_my_machine_array = get_public_keys_from_machine()
 
     lines_not_matching = 0
-    # with codecs.open('/tmp/tmp.tyUKNB362M/blog.http.html', 'r', 'UTF-8') as content_file:
-    # with codecs.open('/tmp/web', 'r', 'UTF-8') as content_file:
-        # content = content_file.read()
-        # lines_not_matching += compate_with_html_page(content)
+    with codecs.open('/tmp/tmp.tyUKNB362M/blog.http.html', 'r', 'UTF-8') as content_file:
+    with codecs.open('/tmp/web', 'r', 'UTF-8') as content_file:
+        content = content_file.read()
+        lines_not_matching += compate_with_html_page(content)
 
     for proto in PROTOCOLS:
         for page_name in PAGES_WITH_GPG_KEYS:
