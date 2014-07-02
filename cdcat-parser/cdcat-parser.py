@@ -11,7 +11,6 @@ In short: Uses the database from cdcat to copy wanted files.
 # modules {{{
 import gzip
 import os
-import sys
 import logging
 import xml.etree.ElementTree as ET
 # }}}
@@ -93,7 +92,8 @@ class CdcatDatabase:  # {{{
         if 'sh' == self._executing_shell:
             self._start_line_comment_token = u'#'
             logging.info(
-                u'Generating copy script for sh (common Linux and Unix shell for scripting)')
+                u'Generating copy script for sh (common Linux and Unix shell for scripting)'
+            )
         if 'cmd' == self._executing_shell:
             self._start_line_comment_token = u'rem'
             logging.info(u'Generating copy script for Windows cmd')
@@ -220,9 +220,8 @@ class CdcatDatabase:  # {{{
             if len(unwanted) != 0:
                 logging.warning(
                     'robocopy does not support to exclude files or directories.'
-                    + ' Directories(s) or file(s) "%s" will be copied although they where excluded.' % (
-                        ' '.join(unwanted)
-                    )
+                    + ' Directories(s) or file(s) "%s" will be copied although they where excluded.',
+                    ' '.join(unwanted)
                 )
 
             print 'robocopy "%s%s%s" "%s\\%s" %s' % (
@@ -291,44 +290,59 @@ class CdcatDatabase:  # {{{
 # }}}
 
 
-def main(catalog_file):  # {{{
-    # cdcat_db_object = CdcatDatabase(directory_separator = '\\', shell = 'sh')
-    cdcat_db_object = CdcatDatabase(directory_separator='\\', shell='cmd')
-    # cdcat_db_object._robocopy_parameter_string = 'test'
-    cdcat_db_object.parse_gzip_file(
-        catalog_file,
-        generate_formats=['robocopy'])
-    # cdcat_db_object.parse_gzip_file(catalog_file, generate_formats=[
-    # 'git-annex' ])
+def main():  # {{{
 
-if __name__ == '__main__':
-    import argparse
-
-    parser = argparse.ArgumentParser(
+    args = argparse.ArgumentParser(
         description="Uses the database from cdcat to copy wanted files.",
-        epilog="Implementation of the work flow explained here: http://superuser.com/a/717689",
+        epilog="Implementation of the work flow explained here:"
+        + " http://superuser.com/a/717689",
     )
-    parser.add_argument(
-        '-f',
-        '--file',
-        required=True,
-        help='cdcat database file')
-    parser.add_argument('-t', '--type')
-    parser.parse_args()
+    args.add_argument(
+        '-v',
+        '--verbosity',
+        action='count',
+        default=0,
+        help="Be more verbose."
+    )
+    args.add_argument(
+        'file',
+        help="cdcat database file",
+    )
+    args.add_argument(
+        '-s',
+        '--shell',
+        choices=['cmd', 'sh'],
+        default='sh',
+        help="Specifies the interpreting shell and thous the environment.",
+    )
+    args.add_argument(
+        '-m',
+        '--method',
+        choices=['robocopy', 'git-annex'],
+        default='git-annex',
+        help="Specifies the program to use.",
+    )
+    user_parms = args.parse_args()
 
     logging.basicConfig(
         format='# %(levelname)s: %(message)s',
         # level=logging.DEBUG,
         level=logging.INFO,
     )
-    # logging.info(u'Running cdcat-parser: %s' % SCRIPT_URL)
-    # if len(sys.argv) > 1:
-        # catalog_file = sys.argv[1]
-    # else:
-        # raise SystemExit(
-            # 'Not enough parameters.'
-            # + ' 1. File path to catalog file.'
-            # + ' The copy scripts will be named after the catalog filename with different suffixes.'
-            # )
-    # main(catalog_file)
+    logging.info(u"Running cdcat-parser: %s", SCRIPT_URL)
+
+    cdcat_db_object = CdcatDatabase(
+        # directory_separator='\\',
+        shell=user_parms.shell
+    )
+    # cdcat_db_object._robocopy_parameter_string = 'test'
+    cdcat_db_object.parse_gzip_file(
+        user_parms.file,
+        generate_formats=[user_parms.method],
+    )
+
+if __name__ == '__main__':
+    import argparse
+
+    main()
 # }}}
