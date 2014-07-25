@@ -26,7 +26,7 @@ for root, dirnames, filenames in os.walk(u'.'):
     if fnmatch.filter(filenames, AUIDIO_FILE_GLOB):
         m3u_fh = codecs.open(os.path.join(root, 'playlist.m3u'), 'w', 'UTF-8')
     for filename in fnmatch.filter(filenames, AUIDIO_FILE_GLOB):
-        m3u_fh.write('{}\n'.format(filename))
+        m3u_fh.write(u'{}\n'.format(filename))
         # print filename
     if 'm3u_fh' in locals():
         m3u_fh.close()
