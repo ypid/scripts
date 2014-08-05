@@ -24,20 +24,27 @@ class ListToTable:
             raw_filepath,
             csv_filepath,
             wanted_properties=(),
-            default_properties=('Model', 'Price'),
-            find_model_and_price=re.compile(ur'\A(?P<model>.+) ab €(?P<price>\d+),(?:--|\d{2})')
+            default_properties=(u'Model', u'Price'),
+            delimiter=u';',
+            find_model_and_price=re.compile(ur'\A(?P<model>.+) ab €(?P<price>\d+),(?:--|\d{2})', re.UNICODE)
     ):
 
         self.__find_model_and_price = find_model_and_price
 
         self._raw_file_fh = codecs.open(raw_filepath,  'r', 'UTF-8')
         self._csv_file_fh = codecs.open(csv_filepath,  'wb', 'UTF-8')
-        self._csv = csv.writer(self._csv_file_fh, delimiter=';')
+        self._csv_delimiter = delimiter
         self._wanted_properties = default_properties + wanted_properties
 
-        self._csv.writerow(self._wanted_properties)
+        self._all_properties = set()
+
+        print self._wanted_properties
+        self.__write_csv_row(self._wanted_properties)
 
         self._parse_raw_file()
+
+    def __write_csv_row(self, items):
+        self._csv_file_fh.write(self._csv_delimiter.join(items) + '\n')
 
     def _parse_raw_file(self):
         """
@@ -50,24 +57,28 @@ class ListToTable:
 
             model_and_price_match = self.__find_model_and_price.search(line)
             if model_and_price_match is None:
-                logging.warn('Could not find model and price in line: %s', line)
+                logging.warn(u"Could not find model and price in line: %s", line)
                 continue
 
-            model = model_and_price_match.group('model')
-            price = model_and_price_match.group('price')
-            logging.info('Item model: %s, price: %s', model, price)
+            model = model_and_price_match.group(u'model')
+            price = model_and_price_match.group(u'price')
+            logging.info(u"Item model: %s, price: %s", model, price)
 
             line = line[model_and_price_match.end():]
 
             wanted_properties = []
             properties = self._parse_properties(line)
-            properties['Model'] = model
-            properties['Price'] = price
+            properties[u'Model'] = model
+            properties[u'Price'] = price
+            self._add_to_all_properties(properties)
             for wanted_key in self._wanted_properties:
                 if wanted_key in properties:
                     wanted_properties.append(properties[wanted_key])
+                else:
+                    wanted_properties.append('')
 
-            self._csv.writerow(wanted_properties)
+            print wanted_properties
+            self.__write_csv_row(wanted_properties)
 
     def _parse_properties(self, string):
         """
@@ -75,13 +86,19 @@ class ListToTable:
         """
 
         properties = dict()
-        for match in re.finditer(ur'(?P<key>\w+): (?P<value>[^•]+)(?: •)?', string):
+        for match in re.finditer(ur'(?P<key>\w+): (?P<value>[^•]+)(?: •)?', string, re.UNICODE):
             key = match.group('key')
             value = match.group('value').rstrip()
             properties[key] = value
 
         return properties
 
+    def _add_to_all_properties(self, properties):
+        for key in properties:
+            self._all_properties.add(key)
+
+    def get_all_properties(self):
+        return self._all_properties
 
 def main():  # {{{
     """Execute module in command line mode."""
@@ -102,34 +119,36 @@ def main():  # {{{
         '--verbosity',
         action='count',
         default=0,
-        help="Be more verbose."
+        help=u"Be more verbose."
     )
     args.add_argument(
         'file',
-        help="raw test file file",
+        help=u"raw test file file",
     )
     args.add_argument(
         '-w',
         '--wanted',
-        help="Wanted property fields."
+        help=u"Wanted property fields."
     )
     user_parms = args.parse_args()
     wanted_properties = ()
     if user_parms.wanted:
-        wanted_properties = tuple(user_parms.wanted.split(','))
+        wanted_properties = tuple(user_parms.wanted.decode('UTF-8').split(','))
 
     logging.basicConfig(
         format='# %(levelname)s: %(message)s',
         # level=logging.DEBUG,
         level=logging.INFO,
     )
-    logging.info(u"Running cdcat-parser: %s", SCRIPT_URL)
+    logging.info(u"Running %s", SCRIPT_URL)
 
     l2t_parser = ListToTable(
         user_parms.file,
-        user_parms.file + '.csv',
+        user_parms.file + u'.csv',
         wanted_properties=wanted_properties
     )
+
+    logging.info(u"All properties: %s", u','.join(l2t_parser.get_all_properties()))
 
 if __name__ == '__main__':
     from argparse import ArgumentError, ArgumentParser
