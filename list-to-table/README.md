@@ -11,4 +11,4 @@ Will result in this output:
     Model;Price;Diagonale;3D;Besonderheiten;Anschlüsse;Energieeffizienzklasse;Standfuß;Tuner;Bildwiederholfrequenz;Panel
     LG Electronics 50PN6504;399;50"/127cm;nein;;1x USB 2.0, LAN, 1x optisch;B;24.70kg;1x DVB-C/-T-Tuner (MPEG-4 AVC);600Hz (interpoliert);Plasma
 
-Using this command: `./list-to-table.py compare_LG-TVs.txt --wanted Diagonale,3D,Besonderheiten,Anschlüsse,Energieeffizienzklasse,Standfuß,Tuner,Bildwiederholfrequenz,Panel`
+Using this command: `./list-to-table.py compare_LG-TVs.txt --wanted 'Diagonale,3D,Energieeffizienzklasse,wnschlüsse,Weitere Anschlüsse,Standfuß,Tuner,Bildwiederholfrequenz,Panel,Besonderheiten`

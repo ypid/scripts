@@ -38,7 +38,6 @@ class ListToTable:
 
         self._all_properties = set()
 
-        print self._wanted_properties
         self.__write_csv_row(self._wanted_properties)
 
         self._parse_raw_file()
@@ -77,7 +76,6 @@ class ListToTable:
                 else:
                     wanted_properties.append('')
 
-            print wanted_properties
             self.__write_csv_row(wanted_properties)
 
     def _parse_properties(self, string):
@@ -86,8 +84,8 @@ class ListToTable:
         """
 
         properties = dict()
-        for match in re.finditer(ur'(?P<key>\w+): (?P<value>[^•]+)(?: •)?', string, re.UNICODE):
-            key = match.group('key')
+        for match in re.finditer(ur'(?P<key>[\w ]+): (?P<value>[^•]+)(?: •)?', string, re.UNICODE):
+            key = match.group('key').lstrip()
             value = match.group('value').rstrip()
             properties[key] = value
 
