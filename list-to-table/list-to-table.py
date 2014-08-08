@@ -2,16 +2,18 @@
 # encoding: utf-8
 # @author Robin Schneider <ypid23@aol.de>
 # @licence GPLv3 <http://www.gnu.org/licenses/gpl.html>
+"""
+This script was written to parse a text, filter out interesting keywords and
+output it as csv. It is written for one custom format which http://geizhals.de
+and http://www.heise.de/preisvergleich use in the feature list of products.
+"""
 
 __version__ = '0.9'
 
 # modules {{{
-import os
 import codecs
 import logging
 import re
-
-import csv
 # }}}
 
 # module wide variables {{{
@@ -46,10 +48,6 @@ class ListToTable:
         self._csv_file_fh.write(self._csv_delimiter.join(items) + '\n')
 
     def _parse_raw_file(self):
-        """
-        Parse raw file.
-        """
-
         for line in self._raw_file_fh:
             if re.match(r'\s*$', line):
                 continue
@@ -80,7 +78,8 @@ class ListToTable:
 
     def _parse_properties(self, string):
         """
-        Return dict for property string line: Diagonale: 50"/127cm • Auflösung: 1920x1080 • Panel: Plasma
+        Return dict for property string line:
+            Diagonale: 50"/127cm • Auflösung: 1920x1080 • Panel: Plasma
         """
 
         properties = dict()
@@ -102,22 +101,14 @@ def main():  # {{{
     """Execute module in command line mode."""
 
     args = ArgumentParser(
-        description="Uses the database from cdcat to copy wanted files.",
-        epilog="Implementation of the work flow explained here:"
-        + " http://superuser.com/a/717689",
+        description="Parse feature list from http://geizhals.de and dump it as csv.",
+        epilog=__doc__
     )
     args.add_argument(
         '-V',
         '--version',
         action='version',
         version='%(prog)s {version}'.format(version=__version__)
-    )
-    args.add_argument(
-        '-v',
-        '--verbosity',
-        action='count',
-        default=0,
-        help=u"Be more verbose."
     )
     args.add_argument(
         'file',
@@ -146,11 +137,13 @@ def main():  # {{{
         wanted_properties=wanted_properties
     )
 
-    logging.info(u"All properties: %s", u','.join(l2t_parser.get_all_properties()))
+    logging.info(
+        u"All properties: %s",
+        u','.join(l2t_parser.get_all_properties())
+    )
 
 if __name__ == '__main__':
     from argparse import ArgumentError, ArgumentParser
-    import sys
 
     main()
 # }}}
