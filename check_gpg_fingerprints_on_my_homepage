@@ -15,11 +15,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """Check the GPG fingerprints on my homepage if there are the correct ones."""
 
+__version__ = '0.9'
+
 # modules {{{
 import subprocess
 import logging
 from HTMLParser import HTMLParser
 import urllib2
+import argparse
 # }}}
 
 logging.basicConfig(
@@ -152,7 +155,46 @@ def compate_with_html_page(html):  # {{{
 
 # main {{{
 if __name__ == '__main__':
+    """Execute module in command line mode."""
+
+    from argparse import ArgumentParser
+
+    args = ArgumentParser(
+        description=__doc__
+    )
+    args.add_argument(
+        '-V',
+        '--version',
+        action='version',
+        version='%(prog)s {version}'.format(version=__version__)
+    )
+    args.add_argument(
+        '-s',
+        '--show',
+        action='store_true',
+        default=False,
+        help=u"Print the expected lines and exit."
+    )
+    args.add_argument(
+        '-c',
+        '--command',
+        action='store_true',
+        default=False,
+        help=u"Print the gpg command used and exit."
+    )
+    user_parms = args.parse_args()
+
     gpg_public_keys_from_my_machine_array = get_public_keys_from_machine()
+
+    if user_parms.command:
+        print(' '.join(GPG_LIST_KEYS_COMMAND))
+        raise SystemExit()
+
+    if user_parms.show:
+        # for line in gpg_public_keys_from_my_machine_array:
+            # print(line)
+        subprocess.call(GPG_LIST_KEYS_COMMAND)
+        raise SystemExit()
 
     lines_not_matching = 0
 
