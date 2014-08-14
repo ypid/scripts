@@ -13,12 +13,11 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''Check the GPG fingerprints on my homepage if there are the correct ones.'''
+"""Check the GPG fingerprints on my homepage if there are the correct ones."""
 
 # modules {{{
 import subprocess
 import logging
-# import codecs
 from HTMLParser import HTMLParser
 import urllib2
 # }}}
@@ -43,11 +42,11 @@ GPG_LIST_KEYS_COMMAND = [
 
 # helper functions {{{
 def make_clean(string, is_html):
-    '''Workaround for HTMLParser.
+    """Workaround for HTMLParser.
 
     Not sure why but if an HTML entity is contained in the parsed HTML the
     HTMLParser does not work probably.
-    '''
+    """
 
     if is_html:
         return string.replace('&lt;', '**EmailStart**').replace('&gt;', '**EmailEnd**')
@@ -56,12 +55,12 @@ def make_clean(string, is_html):
 
 
 def reverse_clean(string):
-    '''Workaround for HTMLParser.'''
+    """Workaround for HTMLParser."""
     return string.replace('**EmailStart**', '<').replace('**EmailEnd**', '>')
 
 
 def sort_string_lines(string):
-    '''Split string by newline, strip whitespace and return the sorted array.'''
+    """Split string by newline, strip whitespace and return the sorted array."""
     array_of_lines = []
     for line in string.split('\n'):
         line = line.strip()
@@ -72,7 +71,7 @@ def sort_string_lines(string):
 
 # get trusted fingerprints from my machine {{{
 def get_public_keys_from_machine():
-    '''Get the local list of public GPG keys to compare with the remote ones.'''
+    """Get the local list of public GPG keys to compare with the remote ones."""
     gpg_public_keys_from_my_machine = u''
 
     process = subprocess.Popen(
@@ -124,7 +123,7 @@ def compate_with_html_page(html):  # {{{
 
     if not len_equal:
         logging.warning(
-            'Lengths for the trusted lines and the lines form the web differ (max %d).',
+            "Lengths for the trusted lines and the lines form the web differ (max %d).",
             max_len)
 
     for idx in range(max_len):
@@ -133,21 +132,21 @@ def compate_with_html_page(html):  # {{{
         if trusted_line is None:
             if trusted_line is not None:
                 logging.warning(
-                    'Line available locally but not upstream: %s',
+                    "Line available locally but not upstream: %s",
                     trusted_line)
         elif trusted_line not in gpg_public_keys_from_web_pages_array:
             logging.error(
                 '%s\n%s%s',
-                'String at line %d was not found remotely:' % idx,
+                "String at line %d was not found remotely:" % idx,
                 '\tExpected: "%s"' % reverse_clean(trusted_line),
                 '\n\tGot:      "%s"' % reverse_clean(
                     gpg_public_keys_from_web_pages_array[
                         idx]) if len_equal else ''
             )
         else:
-            logging.debug('Testing line: %s', trusted_line)
+            logging.debug("Testing line: %s", trusted_line)
             number_ok += 1
-    logging.info('%d lines are equal out of %d', number_ok, max_len)
+    logging.info("%d lines are equal out of %d", number_ok, max_len)
     return max_len - number_ok
 # }}}
 
@@ -156,20 +155,16 @@ if __name__ == '__main__':
     gpg_public_keys_from_my_machine_array = get_public_keys_from_machine()
 
     lines_not_matching = 0
-    with codecs.open('/tmp/tmp.tyUKNB362M/blog.http.html', 'r', 'UTF-8') as content_file:
-    with codecs.open('/tmp/web', 'r', 'UTF-8') as content_file:
-        content = content_file.read()
-        lines_not_matching += compate_with_html_page(content)
 
     for proto in PROTOCOLS:
         for page_name in PAGES_WITH_GPG_KEYS:
             url = '%s://%s' % (proto, PAGES_WITH_GPG_KEYS[page_name])
-            logging.info('Checking page: %s', url)
+            logging.info("Checking page: %s", url)
             content = urllib2.urlopen(url).read().decode('utf-8')
             lines_not_matching += compate_with_html_page(content)
 
     if lines_not_matching == 0:
-        logging.info('Everything seems to be ok.')
+        logging.info("Everything seems to be ok.")
     else:
-        logging.warning('%d lines did not match …', lines_not_matching)
+        logging.warning("%d lines did not match …", lines_not_matching)
 # }}}
