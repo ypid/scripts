@@ -20,9 +20,8 @@ __version__ = '0.9'
 # modules {{{
 import subprocess
 import logging
-from HTMLParser import HTMLParser
 import urllib2
-import argparse
+from HTMLParser import HTMLParser
 # }}}
 
 logging.basicConfig(
