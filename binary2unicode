@@ -61,7 +61,7 @@ if __name__ == '__main__':
         # level=logging.INFO,
     )
 
-    print user_parms.file
+    logging.debug(u"Parsing file: {}".format(user_parms.file))
     with open(user_parms.file, 'r') as f:
         for line in f:
             print bin2unicode(line.rstrip(u'\n'))
