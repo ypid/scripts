@@ -28,7 +28,9 @@ def bin2unicode(bin_string):
         number = int(match.group('binary_number'), 2)
         strings_array.append(unicode(unichr(number)))
         remaining_char_index = match.end()
-    number_of_remaining_chars = len(bin_string) - remaining_char_index
+    number_of_remaining_chars = 0
+    if type(remaining_char_index) == 'int':
+        number_of_remaining_chars = len(bin_string) - remaining_char_index
     if number_of_remaining_chars > 0:
         logging.warning(u"Number of remaining characters: {}".format(number_of_remaining_chars))
         logging.warning(u"Remaining characters: {}".format(bin_string[remaining_char_index:]))
