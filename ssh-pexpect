@@ -31,7 +31,9 @@ from ConfigParser import ConfigParser
 
 class SshExcept:
     _pexepct_password_re = '[Pp]assword:'
-    _pexepct_hostname = r'\w+>'
+    _pexepct_hostname = r'\w+[>#]'
+    _pexepct_hostname_priv = r'\w+#'
+    _cisco_end_command = 'q'
 
     def __init__(
         self,
@@ -83,13 +85,17 @@ class SshExcept:
     def run_commands(self, commands):
 
         for command in commands.split(';'):
+            self._session.expect(self._pexepct_hostname)
             self._session.sendline(command)
-            if self._session.expect([r' --More-- ', self._pexepct_hostname]) == 0:
-                self._session.sendline()
+            while True:
+                if self._session.expect([r' --More-- ', self._pexepct_hostname], timeout=5) == 0:
+                    self._session.sendline(' ')
+                else:
+                    break
 
     def end(self):
 
-        self._session.sendline('q')
+        self._session.sendline(self._cisco_end_command)
         self._session.close()
         self._session.kill('SIGKILL')
 
