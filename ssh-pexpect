@@ -22,6 +22,7 @@ Tried rancid and other scripts but, well, they are old and stuff.
 
 __version__ = '0.8'
 
+import sys
 import os
 import re
 
@@ -30,6 +31,7 @@ from ConfigParser import ConfigParser
 
 class SshExcept:
     _pexepct_password_re = '[Pp]assword:'
+    _pexepct_hostname = r'\w+>'
 
     def __init__(
         self,
@@ -38,7 +40,9 @@ class SshExcept:
         login_passwd='cisco',
         enable_passwd='cisco',
         command=None,
-        interactive=True,
+        interactive=False,
+        timeout=10,
+        logfile=None,
     ):
 
         self._hostname = hostname
@@ -47,19 +51,25 @@ class SshExcept:
         self._enable_passwd = enable_passwd
         self._command = command
         self._interative = interactive
+        self._timeout = timeout
 
         self._session = None
 
+        if not logfile:
+            self._logfile = sys.stdout
+        else:
+            self._logfile = open(logfile, 'a')
+
     def login(self):
 
-        self._session = pexpect.spawn('ssh {0}'.format(self._hostname))
+        self._session = pexpect.spawn('ssh {0}'.format(self._hostname), timeout=self._timeout, logfile=self._logfile)
         index = self._session.expect([self._pexepct_password_re, 'Are you sure you want to continue connecting (yes/no)?'])
         if index == 1:
             self._session.sendline('yes')
             self._session.expect(self._pexepct_password_re)
 
         self._session.sendline(self._login_passwd)
-        self._session.expect(r'\w+>')
+        self._session.expect(self._pexepct_hostname)
         self._session.sendline('enable')
         self._session.expect(self._pexepct_password_re)
         self._session.sendline(self._enable_passwd)
@@ -74,34 +84,47 @@ class SshExcept:
 
         for command in commands.split(';'):
             self._session.sendline(command)
+            if self._session.expect([r' --More-- ', self._pexepct_hostname]) == 0:
+                self._session.sendline()
+
+    def end(self):
+
+        self._session.sendline('q')
+        self._session.close()
+        self._session.kill('SIGKILL')
 
 def main(args):
 
     cfg = ConfigParser()
     cfg.read(args.config_file)
-    use_section = args.hostname
 
-    for section in cfg.sections():
-        if re.match(section, args.hostname):
-            use_section = section
+    for hostname in args.hostname:
+        use_section = hostname
 
-    user = cfg.get(use_section, 'user')
-    passwd = cfg.get(use_section, 'passwd')
+        for section in cfg.sections():
+            if re.match(section, hostname):
+                use_section = section
 
-    if cfg.has_option(use_section, 'enable_passwd'):
-        enable_passwd = cfg.get(use_section, 'enable_passwd')
-    else:
-        enable_passwd = passwd
+        user = cfg.get(use_section, 'user')
+        passwd = cfg.get(use_section, 'passwd')
 
-    ssh_expect = SshExcept(
-        args.hostname,
-        user=user,
-        login_passwd=passwd,
-        enable_passwd=enable_passwd,
-        command=args.command,
-        interactive=args.interactive
-    )
-    ssh_expect.login()
+        if cfg.has_option(use_section, 'enable_passwd'):
+            enable_passwd = cfg.get(use_section, 'enable_passwd')
+        else:
+            enable_passwd = passwd
+
+        ssh_expect = SshExcept(
+            hostname,
+            user=user,
+            login_passwd=passwd,
+            enable_passwd=enable_passwd,
+            command=args.command,
+            interactive=args.interactive,
+            timeout=args.timeout,
+            logfile=args.logfile,
+        )
+        ssh_expect.login()
+        ssh_expect.end()
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
@@ -117,13 +140,14 @@ if __name__ == '__main__':
     )
     args.add_argument(
         'hostname',
+        nargs='+',
         help=u"hostname (is just passed to the ssh command)",
     )
     args.add_argument(
         '-i',
         '--interactive',
         action='store_true',
-        default=True,
+        default=False,
         help=u"Enter interactive mode.",
     )
     args.add_argument(
@@ -137,6 +161,18 @@ if __name__ == '__main__':
         '-c',
         '--command',
         help=u"Commands to run",
+    )
+    args.add_argument(
+        '-l',
+        '--logfile',
+        help=u"Set logfile for command output.",
+    )
+    args.add_argument(
+        '-t',
+        '--timeout',
+        type=int,
+        default=10,
+        help=u"Set timeout",
     )
     args.add_argument(
         '-f',
