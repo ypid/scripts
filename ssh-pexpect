@@ -23,9 +23,6 @@ Tried rancid and other scripts but, well, they are old and stuff.
 __version__ = '0.8'
 
 import os
-import sys
-import re
-import argparse
 
 import pexpect
 from ConfigParser import ConfigParser
@@ -50,25 +47,32 @@ class SshExcept:
         self._command = command
         self._interative = interactive
 
+        self._session = None
+
     def login(self):
 
-        child = pexpect.spawn('ssh {0}'.format(self._hostname))
-        index = child.expect([self._pexepct_password_re, 'Are you sure you want to continue connecting (yes/no)?'])
+        self._session = pexpect.spawn('ssh {0}'.format(self._hostname))
+        index = self._session.expect([self._pexepct_password_re, 'Are you sure you want to continue connecting (yes/no)?'])
         if index == 1:
-            child.sendline('yes')
-            child.expect(self._pexepct_password_re)
+            self._session.sendline('yes')
+            self._session.expect(self._pexepct_password_re)
 
-        child.sendline(self._login_passwd)
-        child.expect(r'\w+>')
-        child.sendline('enable')
-        child.expect(self._pexepct_password_re)
-        child.sendline(self._enable_passwd)
+        self._session.sendline(self._login_passwd)
+        self._session.expect(r'\w+>')
+        self._session.sendline('enable')
+        self._session.expect(self._pexepct_password_re)
+        self._session.sendline(self._enable_passwd)
 
         if self._command:
-            child.sendline(self._command)
+            self.run_commands(self._command)
 
         if self._interative:
-            child.interact()
+            self._session.interact()
+
+    def run_commands(self, commands):
+
+        for command in commands.split(';'):
+            self._session.sendline(command)
 
 def main(args):
 
@@ -77,9 +81,9 @@ def main(args):
     user = cfg.get(args.hostname, 'user')
     passwd = cfg.get(args.hostname, 'passwd')
 
-    try:
+    if cfg.has_option(args.hostname, 'enable_passwd'):
         enable_passwd = cfg.get(args.hostname, 'enable_passwd')
-    except:
+    else:
         enable_passwd = passwd
 
     ssh_expect = SshExcept(
