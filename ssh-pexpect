@@ -23,6 +23,7 @@ Tried rancid and other scripts but, well, they are old and stuff.
 __version__ = '0.8'
 
 import os
+import re
 
 import pexpect
 from ConfigParser import ConfigParser
@@ -78,26 +79,32 @@ def main(args):
 
     cfg = ConfigParser()
     cfg.read(args.config_file)
-    user = cfg.get(args.hostname, 'user')
-    passwd = cfg.get(args.hostname, 'passwd')
+    use_section = args.hostname
 
-    if cfg.has_option(args.hostname, 'enable_passwd'):
-        enable_passwd = cfg.get(args.hostname, 'enable_passwd')
+    for section in cfg.sections():
+        if re.match(section, args.hostname):
+            use_section = section
+
+    user = cfg.get(use_section, 'user')
+    passwd = cfg.get(use_section, 'passwd')
+
+    if cfg.has_option(use_section, 'enable_passwd'):
+        enable_passwd = cfg.get(use_section, 'enable_passwd')
     else:
         enable_passwd = passwd
 
     ssh_expect = SshExcept(
-            args.hostname,
-            user=user,
-            login_passwd=passwd,
-            enable_passwd=enable_passwd,
-            command=args.command,
-            interactive=args.interactive
+        args.hostname,
+        user=user,
+        login_passwd=passwd,
+        enable_passwd=enable_passwd,
+        command=args.command,
+        interactive=args.interactive
     )
     ssh_expect.login()
 
 if __name__ == '__main__':
-    from argparse import ArgumentError, ArgumentParser
+    from argparse import ArgumentParser
     args = ArgumentParser(
         description=u"Run ssh through pexpect",
         epilog=__doc__
