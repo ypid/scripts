@@ -1,0 +1,138 @@
+#!/usr/bin/env python
+# encoding: utf-8
+# @licence AGPLv3 <https://www.gnu.org/licenses/agpl-3.0.html>
+# @author Copyright (C) 2015 Robin Schneider <ypid@riseup.net>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, version 3 of the
+# License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+Quick and dirty SSH login script intended for cisco routers.
+Tried rancid and other scripts but, well, they are old and stuff.
+"""
+
+__version__ = '0.8'
+
+import os
+import sys
+import re
+import argparse
+
+import pexpect
+from ConfigParser import ConfigParser
+
+class SshExcept:
+    _pexepct_password_re = '[Pp]assword:'
+
+    def __init__(
+        self,
+        hostname,
+        user='admin',
+        login_passwd='cisco',
+        enable_passwd='cisco',
+        command=None,
+        interactive=True,
+    ):
+
+        self._hostname = hostname
+        self._user = user
+        self._login_passwd = login_passwd
+        self._enable_passwd = enable_passwd
+        self._command = command
+        self._interative = interactive
+
+    def login(self):
+
+        child = pexpect.spawn('ssh {0}'.format(self._hostname))
+        index = child.expect([self._pexepct_password_re, 'Are you sure you want to continue connecting (yes/no)?'])
+        if index == 1:
+            child.sendline('yes')
+            child.expect(self._pexepct_password_re)
+
+        child.sendline(self._login_passwd)
+        child.expect(r'\w+>')
+        child.sendline('enable')
+        child.expect(self._pexepct_password_re)
+        child.sendline(self._enable_passwd)
+
+        if self._command:
+            child.sendline(self._command)
+
+        if self._interative:
+            child.interact()
+
+def main(args):
+
+    cfg = ConfigParser()
+    cfg.read(args.config_file)
+    user = cfg.get(args.hostname, 'user')
+    passwd = cfg.get(args.hostname, 'passwd')
+
+    try:
+        enable_passwd = cfg.get(args.hostname, 'enable_passwd')
+    except:
+        enable_passwd = passwd
+
+    ssh_expect = SshExcept(
+            args.hostname,
+            user=user,
+            login_passwd=passwd,
+            enable_passwd=enable_passwd,
+            command=args.command,
+            interactive=args.interactive
+    )
+    ssh_expect.login()
+
+if __name__ == '__main__':
+    from argparse import ArgumentError, ArgumentParser
+    args = ArgumentParser(
+        description=u"Run ssh through pexpect",
+        epilog=__doc__
+    )
+    args.add_argument(
+        '-V',
+        '--version',
+        action='version',
+        version='%(prog)s {version}'.format(version=__version__)
+    )
+    args.add_argument(
+        'hostname',
+        help=u"hostname (is just passed to the ssh command)",
+    )
+    args.add_argument(
+        '-i',
+        '--interactive',
+        action='store_true',
+        default=True,
+        help=u"Enter interactive mode.",
+    )
+    args.add_argument(
+        '-e',
+        '--enable',
+        action='store_true',
+        default=True,
+        help=u"Get higher privileges via the 'enable' command.",
+    )
+    args.add_argument(
+        '-c',
+        '--command',
+        help=u"Commands to run",
+    )
+    args.add_argument(
+        '-f',
+        '--config-file',
+        default='{}/.config/ssh-pexpect.cfg'.format(os.environ['HOME']),
+        help=u"Path to configuration file (default is ~/config/ssh-pexpect.cfg",
+    )
+    user_parms = args.parse_args()
+
+    main(user_parms)
