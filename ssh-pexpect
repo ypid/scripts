@@ -71,10 +71,11 @@ class SshExcept:
             self._session.expect(self._pexepct_password_re)
 
         self._session.sendline(self._login_passwd)
-        self._session.expect(self._pexepct_hostname)
-        self._session.sendline('enable')
-        self._session.expect(self._pexepct_password_re)
-        self._session.sendline(self._enable_passwd)
+
+        if self._session.expect([self._pexepct_hostname_priv, self._pexepct_hostname]) == 1:
+            self._session.sendline('enable')
+            self._session.expect(self._pexepct_password_re)
+            self._session.sendline(self._enable_passwd)
 
         if self._command:
             self.run_commands(self._command)
@@ -85,13 +86,20 @@ class SshExcept:
     def run_commands(self, commands):
 
         for command in commands.split(';'):
-            self._session.expect(self._pexepct_hostname)
+            try:
+                self._session.expect(self._pexepct_hostname, timeout=2)
+            except pexpect.TIMEOUT:
+                pass
+
             self._session.sendline(command)
             while True:
-                if self._session.expect([r' --More-- ', self._pexepct_hostname], timeout=5) == 0:
-                    self._session.sendline(' ')
-                else:
-                    break
+                try:
+                    if self._session.expect([r' --More-- ', self._pexepct_hostname], timeout=5) == 0:
+                        self._session.sendline(' ')
+                    else:
+                        break
+                except pexpect.TIMEOUT:
+                    self._session.sendline()
 
     def end(self):
 
