@@ -36,7 +36,7 @@ PAGES_WITH_GPG_KEYS = {
 }
 PROTOCOLS = ['http', 'https']
 GPG_LIST_KEYS_COMMAND = [
-    'gpg', '--list-public-keys', '--fingerprint',
+    'gpg', '--no-options', '--list-public-keys', '--fingerprint',
     'Robin Schneider (Automatic Signing Key) <ypid23@aol.de>',
     'Robin Schneider (Release Signing Key) <ypid23@aol.de>',
     'Robin `ypid` Schneider <ypid23@aol.de>'
