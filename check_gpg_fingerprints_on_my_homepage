@@ -39,7 +39,7 @@ GPG_LIST_KEYS_COMMAND = [
     'gpg', '--no-options', '--list-public-keys', '--fingerprint',
     'Robin Schneider (Automatic Signing Key) <ypid23@aol.de>',
     'Robin Schneider (Release Signing Key) <ypid23@aol.de>',
-    'Robin `ypid` Schneider <ypid23@aol.de>'
+    'Robin Schneider <ypid23@aol.de>'
 ]
 
 # helper functions {{{
@@ -180,6 +180,13 @@ if __name__ == '__main__':
         action='store_true',
         default=False,
         help=u"Print the gpg command used and exit."
+    )
+    args.add_argument(
+        '-e',
+        '--html-escape',
+        action='store_true',
+        default=False,
+        help=u"Use HTML entities for all special characters"
     )
     user_parms = args.parse_args()
 

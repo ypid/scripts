@@ -17,7 +17,7 @@
 ## You should have received a copy of the GNU Affero General Public License
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-repo_name="`git remote -v|grep '^origin'|head -n 1|sed 's/^.*\/\(.*\)\(\.git\| \).*/\1/'`"
+repo_name="`git remote --verbose | grep '^origin' | head --lines=1 | perl -lne 'm#://([^/]*/){2}(?<repo_name>[^ ]*?)(\.git| )# && print $+{repo_name}'`"
 git remote add my "${GITHUB_USER}.github.com:${GITHUB_USER}/${repo_name}.git"
 echo "### Your repo is at: https://github.com/${GITHUB_USER}/${repo_name}"
 git push --set-upstream my
