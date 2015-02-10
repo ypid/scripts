@@ -17,7 +17,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 Quick and dirty SSH login script intended for cisco routers.
-Tried rancid and other scripts but, well, they are old and stuff.
+Tried rancid and other scripts but, well, they are old and did not really work.
 """
 
 __version__ = '0.8'
@@ -162,7 +162,8 @@ if __name__ == '__main__':
         '--interactive',
         action='store_true',
         default=False,
-        help=u"Enter interactive mode.",
+        help=u"Enter interactive mode"
+        "(if an additional command is passed this command will be executed first).",
     )
     args.add_argument(
         '-e',
