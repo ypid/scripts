@@ -1,0 +1,288 @@
+#!/usr/bin/env python
+# encoding: utf-8
+# @licence AGPLv3 <https://www.gnu.org/licenses/agpl-3.0.html>
+# @author Copyright (C) 2015 Robin Schneider <ypid@riseup.net>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, version 3 of the
+# License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""Generate /etc/ethers file based on network traffic."""
+
+__version__ = '0.9'
+
+# modules {{{
+import logging
+import json
+import io
+# }}}
+
+logging.getLogger("scapy.runtime").setLevel(logging.ERROR)  # Gets rid of IPV6 Error when importing scapy
+from scapy.all import Ether, BOOTP, DHCP, DHCPTypes, sniff
+
+logging.basicConfig(
+    format='%(levelname)s: %(message)s',
+    level=logging.DEBUG,
+    # level=logging.INFO,
+)
+
+
+class NetworkTrafficParser:
+    _results = dict()
+
+    def _packet_from_client(self):
+        if self._resp.haslayer(BOOTP):
+            return {
+                1: True,
+                2: False,
+            }[self._resp[BOOTP].op]
+
+    def _get_dhcp_option(self, options, option_name):
+        for option in options:
+            if type(option) is tuple:
+                if option[0] == option_name:
+                    return option[1]
+        # if self._resp[DHCP].options[12] is tuple:
+
+    def _add_result(self, key, value, origin):
+        if key in self._results[self._mac_addr] and self._results[self._mac_addr][key] != value:
+            logging.warning(
+                u"Replace \"{}\" with \"{}\" for {} (origin: {})".format(
+                    self._results[self._mac_addr][key],
+                    value,
+                    key,
+                    origin,
+                )
+            )
+        else:
+            logging.debug(
+                u"Set \"{}\" for {} (origin: {})".format(
+                    value,
+                    key,
+                    origin,
+                )
+            )
+        self._results[self._mac_addr][key] = value
+
+    def _add_dhcp_option_to_result(self, option_name):
+        if self._get_dhcp_option(self._resp[DHCP].options, option_name):
+            self._add_result(
+                option_name,
+                self._get_dhcp_option(self._resp[DHCP].options, option_name),
+                'dhcp {}'.format(option_name),
+            )
+
+    def _add_bootp_option_to_result(self, option_name):
+        """Does not work?"""
+        if self._resp[BOOTP][option_name] != '0.0.0.0':
+            self._add_result(
+                option_name,
+                self._resp[BOOTP][option_name],
+                'bootp {}'.format(option_name),
+            )
+            return True
+        else:
+            return False
+
+    def get_results(self):
+        return unicode(json.dumps(
+                        self._results,
+                        indent=4,
+                        ensure_ascii=False,
+                    )
+                )
+
+    def load_from_json(self, filename):
+        logging.info(u"Loading file {}".format(filename))
+        with io.open(filename, 'r', encoding='utf-8') as f:
+            self._results = json.load(f)
+
+    def save_as_json(self, filename):
+        logging.info(u"Saving results to file {}".format(filename))
+        with io.open(filename, 'w', encoding='utf-8') as f:
+            f.write(self.get_results())
+
+    def save_as_ethers_file(
+        self,
+        filename,
+        hostname_prefix='',
+        ip_prefix='',
+        include_ho_hostname=True,
+    ):
+
+        logging.info(u"Saving results to ethers file {}".format(filename))
+        with io.open(filename, 'w', encoding='utf-8') as f:
+            for mac_addr in self._results:
+                if 'hostname' in self._results[mac_addr]:
+                        f.write(unicode('{} {}\n'.format(
+                            mac_addr,
+                            hostname_prefix + self._results[mac_addr]['hostname'],
+                            )
+                        ))
+                elif include_ho_hostname and 'ip_addr' in self._results[mac_addr]:
+                    f.write(unicode('{} {}\n'.format(
+                        mac_addr,
+                        ip_prefix + self._results[mac_addr]['ip_addr'],
+                        )
+                    ))
+                else:
+                    logging.debug(u"No hostname for mac address {} found".format(
+                        mac_addr,
+                        )
+                    )
+
+    def parse(self, resp):
+        self._resp = resp
+
+        if self._resp.haslayer(DHCP):
+            # Error checking {{{
+            if self._resp[BOOTP].hlen != 6:
+                logging.warning(
+                    u"Hardware address length is not 6 bytes as usual for Ethernet."
+                    " It is {}.".format(self._resp[BOOTP].hlen))
+            # }}}
+
+            self._mac_addr = self._resp[Ether].src
+
+            if not self._mac_addr in self._results:
+                self._results[self._mac_addr] = {
+                    'xid': self._resp[BOOTP].xid,
+                }
+
+            if self._packet_from_client():
+                logging.info(u"DHCP packet from client")
+
+                self._add_dhcp_option_to_result('hostname')
+                if self._resp[BOOTP].yiaddr != '0.0.0.0':
+                    self._add_result(
+                        'ip_addr',
+                        self._resp[BOOTP].yiaddr,
+                        'bootp yiaddr',
+                    )
+                else:
+                    self._add_dhcp_option_to_result('requested_addr')
+            else:
+                logging.info(u"DHCP packet from server")
+                if self._resp[BOOTP].siaddr != '0.0.0.0':
+                    self._add_result(
+                        'ip_addr',
+                        self._resp[BOOTP].siaddr,
+                        'bootp siaddr',
+                    )
+
+
+            logging.info(
+                u"Got DHCP {} from {}: {}, xid: {}".format(
+                    DHCPTypes[self._resp[DHCP].options[0][1]],
+                    'client' if self._packet_from_client() else 'server',
+                    self._mac_addr,
+                    hex(self._results[self._mac_addr]['xid'])
+                )
+            )
+            # logging.info(self._resp[DHCP].options)
+            print('')
+
+# main {{{
+if __name__ == '__main__':
+    from argparse import ArgumentParser
+
+    args = ArgumentParser(
+        description=__doc__,
+        # epilog=__doc__,
+    )
+    args.add_argument(
+        '-V',
+        '--version',
+        action='version',
+        version='%(prog)s {version}'.format(version=__version__)
+    )
+    args.add_argument(
+        '-i',
+        '--interface',
+        help=u"Interface name to sniff on.",
+    )
+    args.add_argument(
+        '-f',
+        '--file',
+        help=u"Pcap file to read as input.",
+    )
+    args.add_argument(
+        '-j',
+        '--json-file',
+        help=u"Load/save results in a JSON file.",
+    )
+    args.add_argument(
+        '-p',
+        '--print',
+        default='',
+        help=u"Print results as JSON to stdout.",
+    )
+    args.add_argument(
+        '-e',
+        '--ethers-file',
+        help=u"Save to ethers file.",
+    )
+    args.add_argument(
+        '-H',
+        '--hostname-prefix',
+        default='',
+        help=u"Hostname prefix for ethers file.",
+    )
+    args.add_argument(
+        '-P',
+        '--ip-prefix',
+        default='',
+        help=u"IP Address prefix for ethers file.",
+    )
+    args.add_argument(
+        '-n',
+        '--no-hostname',
+        action='store_true',
+        default=True,
+        help=u"Include entries for hosts with no hostnames.",
+    )
+    user_parms = args.parse_args()
+
+    n = NetworkTrafficParser()
+
+    if user_parms.json_file:
+        n.load_from_json(user_parms.json_file)
+
+    if user_parms.interface:
+        logging.info(u"Sniffing on {}.".format(user_parms.interface))
+        sniff(
+            filter="udp and (port 67 or 68)",
+            prn=n.parse,
+            iface=user_parms.interface
+        )
+
+    if user_parms.file:
+        sniff(
+            filter="udp and (port 67 or 68)",
+            prn=n.parse,
+            offline=user_parms.file
+        )
+
+    if user_parms.json_file:
+        print(n.get_results())
+
+    if user_parms.json_file:
+        n.save_as_json(user_parms.json_file)
+
+    if user_parms.ethers_file:
+        n.save_as_ethers_file(
+            user_parms.ethers_file,
+            hostname_prefix=user_parms.hostname_prefix,
+            ip_prefix=user_parms.ip_prefix,
+            include_ho_hostname=user_parms.no_hostname,
+        )
+
+# }}}

@@ -1,0 +1,21 @@
+#!/bin/bash
+## Used for dd-wrt (Linksys WRT54GL)
+
+file="$1"
+prefix="$2"
+
+function extract_mac {
+    echo $1 | grep --only-matching --perl-regexp '([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})' | sed 's/ff:ff:ff:ff:ff:ff//'
+}
+
+while read line; do
+    if echo $line | grep ': vlan0:' -q; then
+        echo "`extract_mac "$line"` ${prefix}_LAN"
+    fi
+    if echo $line | grep ': vlan1:' -q; then
+        echo "`extract_mac "$line"` ${prefix}_WAN"
+    fi
+    if echo $line | grep ': eth1:' -q; then
+        echo "`extract_mac "$line"` ${prefix}_WLAN"
+    fi
+done < "$1"

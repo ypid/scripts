@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-Quick and dirty SSH login script intended for cisco routers.
+Quick and dirty SSH login script intended for cisco routers and switches.
 Tried rancid and other scripts but, well, they are old and did not really work.
 """
 
@@ -193,7 +193,7 @@ if __name__ == '__main__':
         '-f',
         '--config-file',
         default='{}/.config/ssh-pexpect.cfg'.format(os.environ['HOME']),
-        help=u"Path to configuration file (default is ~/config/ssh-pexpect.cfg",
+        help=u"Path to configuration file (default is ~/config/ssh-pexpect.cfg)",
     )
     user_parms = args.parse_args()
 
