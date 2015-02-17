@@ -26,7 +26,7 @@ import io
 # }}}
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)  # Gets rid of IPV6 Error when importing scapy
-from scapy.all import Ether, BOOTP, DHCP, DHCPTypes, sniff
+from scapy.all import Ether, BOOTP, DHCP, DHCPTypes, NBTDatagram, sniff
 
 logging.basicConfig(
     format='%(levelname)s: %(message)s',
@@ -53,16 +53,9 @@ class NetworkTrafficParser:
         # if self._resp[DHCP].options[12] is tuple:
 
     def _add_result(self, key, value, origin):
-        if key in self._results[self._mac_addr] and self._results[self._mac_addr][key] != value:
-            logging.warning(
-                u"Replace \"{}\" with \"{}\" for {} (origin: {})".format(
-                    self._results[self._mac_addr][key],
-                    value,
-                    key,
-                    origin,
-                )
-            )
-        else:
+        value = value.strip()
+        if self._mac_addr not in self._results:
+            self._results[self._mac_addr] = {}
             logging.debug(
                 u"Set \"{}\" for {} (origin: {})".format(
                     value,
@@ -70,7 +63,16 @@ class NetworkTrafficParser:
                     origin,
                 )
             )
-        self._results[self._mac_addr][key] = value
+            self._results[self._mac_addr][key] = value
+        elif key in self._results[self._mac_addr] and self._results[self._mac_addr][key].lower() != value.lower():
+            logging.warning(
+                u"Ignore new value \"{}\" and keep \"{}\" for {} (origin: {})".format(
+                    self._results[self._mac_addr][key],
+                    value,
+                    key,
+                    origin,
+                )
+            )
 
     def _add_dhcp_option_to_result(self, option_name):
         if self._get_dhcp_option(self._resp[DHCP].options, option_name):
@@ -97,6 +99,7 @@ class NetworkTrafficParser:
                         self._results,
                         indent=4,
                         ensure_ascii=False,
+                        sort_keys=True,
                     )
                 )
 
@@ -120,7 +123,7 @@ class NetworkTrafficParser:
 
         logging.info(u"Saving results to ethers file {}".format(filename))
         with io.open(filename, 'w', encoding='utf-8') as f:
-            for mac_addr in self._results:
+            for mac_addr in sorted(self._results):
                 if 'hostname' in self._results[mac_addr]:
                         f.write(unicode('{} {}\n'.format(
                             mac_addr,
@@ -142,6 +145,8 @@ class NetworkTrafficParser:
     def parse(self, resp):
         self._resp = resp
 
+        self._mac_addr = self._resp[Ether].src
+
         if self._resp.haslayer(DHCP):
             # Error checking {{{
             if self._resp[BOOTP].hlen != 6:
@@ -149,8 +154,6 @@ class NetworkTrafficParser:
                     u"Hardware address length is not 6 bytes as usual for Ethernet."
                     " It is {}.".format(self._resp[BOOTP].hlen))
             # }}}
-
-            self._mac_addr = self._resp[Ether].src
 
             if not self._mac_addr in self._results:
                 self._results[self._mac_addr] = {
@@ -189,6 +192,17 @@ class NetworkTrafficParser:
             )
             # logging.info(self._resp[DHCP].options)
             print('')
+        elif self._resp.haslayer(NBTDatagram):
+            # logging.info(u"Found NBTDatagram")
+            # print(self._resp[NBTDatagram].fields)
+            # print(self._resp[NBTDatagram].fields['SourceName'])
+            # print(self._resp[NBTDatagram].fields['SourceIP'])
+            if 'SourceName' in self._resp[NBTDatagram].fields:
+                self._add_result(
+                    'hostname',
+                    self._resp[NBTDatagram].fields['SourceName'],
+                    'NETBIOS SourceName',
+                )
 
 # main {{{
 if __name__ == '__main__':
@@ -221,8 +235,9 @@ if __name__ == '__main__':
     )
     args.add_argument(
         '-p',
-        '--print',
-        default='',
+        '--print-results',
+        action='store_true',
+        default=False,
         help=u"Print results as JSON to stdout.",
     )
     args.add_argument(
@@ -254,7 +269,10 @@ if __name__ == '__main__':
     n = NetworkTrafficParser()
 
     if user_parms.json_file:
-        n.load_from_json(user_parms.json_file)
+        try:
+            n.load_from_json(user_parms.json_file)
+        except:
+            pass
 
     if user_parms.interface:
         logging.info(u"Sniffing on {}.".format(user_parms.interface))
@@ -271,7 +289,7 @@ if __name__ == '__main__':
             offline=user_parms.file
         )
 
-    if user_parms.json_file:
+    if user_parms.print_results:
         print(n.get_results())
 
     if user_parms.json_file:
