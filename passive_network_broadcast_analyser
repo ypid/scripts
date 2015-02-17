@@ -17,7 +17,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Generate /etc/ethers file based on network traffic."""
 
-__version__ = '0.9'
+__version__ = '0.10'
 
 # modules {{{
 import logging
@@ -146,6 +146,28 @@ class NetworkTrafficParser:
                         )
                     )
 
+    def save_as_hosts_file(
+        self,
+        filename,
+        hostname_prefix='',
+    ):
+
+        logging.info(u"Saving results to hosts file {}".format(filename))
+        with io.open(filename, 'w', encoding='utf-8') as f:
+            for mac_addr in sorted(self._results):
+                if 'hostname' in self._results[mac_addr] and 'ip_addr' in self._results[mac_addr]:
+                        f.write(unicode('{}\t{}\n'.format(
+                            self._results[mac_addr]['ip_addr'],
+                            hostname_prefix + self._results[mac_addr]['hostname'],
+                            )
+                        ))
+                else:
+                    logging.debug(u"No {} for mac address {} found.".format(
+                        'hostname' if 'hostname' in self._results[mac_addr] else 'ip_addr',
+                        mac_addr,
+                        )
+                    )
+
     def parse(self, resp):
         self._resp = resp
 
@@ -257,6 +279,11 @@ if __name__ == '__main__':
         help=u"Save to ethers file.",
     )
     args.add_argument(
+        '-o',
+        '--hosts-file',
+        help=u"Save to ethers file.",
+    )
+    args.add_argument(
         '-H',
         '--hostname-prefix',
         default='',
@@ -312,6 +339,12 @@ if __name__ == '__main__':
             hostname_prefix=user_parms.hostname_prefix,
             ip_prefix=user_parms.ip_prefix,
             include_ho_hostname=user_parms.no_hostname,
+        )
+
+    if user_parms.hosts_file:
+        n.save_as_hosts_file(
+            user_parms.hosts_file,
+            hostname_prefix=user_parms.hostname_prefix,
         )
 
 # }}}
