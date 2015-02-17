@@ -17,7 +17,11 @@
 ## You should have received a copy of the GNU Affero General Public License
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-repo_name="`git remote --verbose | grep '^origin' | head --lines=1 | perl -lne 'm#://([^/]*/){2}(?<repo_name>[^ ]*?)(\.git| )# && print $+{repo_name}'`"
-git remote add my "${GITHUB_USER}.github.com:${GITHUB_USER}/${repo_name}.git"
+# repo_name="`git remote --verbose | grep '^origin' | head --lines=1 | perl -lne 'm#://([^/]*/){2}(?<repo_name>[^ ]*?)(\.git| )# && print $+{repo_name}'`"
+repo_name="`git remote --verbose | grep '^origin' | head --lines=1 | perl -lne 'm#(?:(?<username>\w)/|://([^/]*/){2})(?<repo_name>[^ ]*?)(\.git| )# && print $+{repo_name}'`"
 echo "### Your repo is at: https://github.com/${GITHUB_USER}/${repo_name}"
-git push --set-upstream my
+
+if [ "$1" != '-n' ]; then
+    git remote add my "${GITHUB_USER}.github.com:${GITHUB_USER}/${repo_name}.git"
+    git push --set-upstream my
+fi

@@ -54,8 +54,20 @@ class NetworkTrafficParser:
 
     def _add_result(self, key, value, origin):
         value = value.strip()
+
         if self._mac_addr not in self._results:
-            self._results[self._mac_addr] = {}
+            self._results[self._mac_addr][key] = {}
+
+        if key in self._results[self._mac_addr] and self._results[self._mac_addr][key].lower() == value.lower():
+            logging.warning(
+                u"Ignore new value \"{}\" and keep \"{}\" for {} (origin: {}) (only difference is case of the characters)".format(
+                    self._results[self._mac_addr][key],
+                    value,
+                    key,
+                    origin,
+                )
+            )
+        else:
             logging.debug(
                 u"Set \"{}\" for {} (origin: {})".format(
                     value,
@@ -64,15 +76,7 @@ class NetworkTrafficParser:
                 )
             )
             self._results[self._mac_addr][key] = value
-        elif key in self._results[self._mac_addr] and self._results[self._mac_addr][key].lower() != value.lower():
-            logging.warning(
-                u"Ignore new value \"{}\" and keep \"{}\" for {} (origin: {})".format(
-                    self._results[self._mac_addr][key],
-                    value,
-                    key,
-                    origin,
-                )
-            )
+
 
     def _add_dhcp_option_to_result(self, option_name):
         if self._get_dhcp_option(self._resp[DHCP].options, option_name):
@@ -196,12 +200,19 @@ class NetworkTrafficParser:
             # logging.info(u"Found NBTDatagram")
             # print(self._resp[NBTDatagram].fields)
             # print(self._resp[NBTDatagram].fields['SourceName'])
-            # print(self._resp[NBTDatagram].fields['SourceIP'])
+            print(self._resp[NBTDatagram].fields['SourceIP'])
             if 'SourceName' in self._resp[NBTDatagram].fields:
                 self._add_result(
                     'hostname',
                     self._resp[NBTDatagram].fields['SourceName'],
                     'NETBIOS SourceName',
+                )
+            if 'SourceIP' in self._resp[NBTDatagram].fields:
+                print('testing')
+                self._add_result(
+                    'ip_addr',
+                    self._resp[NBTDatagram].fields['SourceIP'],
+                    'NETBIOS SourceIP',
                 )
 
 # main {{{
