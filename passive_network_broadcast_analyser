@@ -15,14 +15,22 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""Generate /etc/ethers file based on network traffic."""
+"""
+Analyse broadcast network traffic and gather information about hosts contained in the dump.
+Interesting information is the hostname, the mac address and the IP address.
+The data is gathered from DHCPv4 and Netbios traffic.
+This information is stored in an JSON file. Export options for /etc/hosts and /etc/ethers file format exist.
+"""
 
-__version__ = '0.10'
+__version__ = '0.11'
 
 # modules {{{
 import logging
 import json
 import io
+import os
+import re
+# from socket import inet_aton
 # }}}
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)  # Gets rid of IPV6 Error when importing scapy
@@ -56,17 +64,30 @@ class NetworkTrafficParser:
         value = value.strip()
 
         if self._mac_addr not in self._results:
-            self._results[self._mac_addr][key] = {}
+            self._results[self._mac_addr] = {}
 
-        if key in self._results[self._mac_addr] and self._results[self._mac_addr][key].lower() == value.lower():
-            logging.warning(
-                u"Ignore new value \"{}\" and keep \"{}\" for {} (origin: {}) (only difference is case of the characters)".format(
-                    self._results[self._mac_addr][key],
-                    value,
-                    key,
-                    origin,
+        if key in self._results[self._mac_addr]:
+            if self._results[self._mac_addr][key] == value:
+                pass
+            elif self._results[self._mac_addr][key].lower() == value.lower():
+                logging.debug(
+                    u"Ignore new value \"{}\" and keep \"{}\" for {} (origin: {}) (only difference is case of the characters)".format(
+                        value,
+                        self._results[self._mac_addr][key],
+                        key,
+                        origin,
+                    )
                 )
-            )
+            else:
+                logging.debug(
+                    u"Replace \"{}\" with new value \"{}\" for {} (origin: {})".format(
+                        self._results[self._mac_addr][key],
+                        value,
+                        key,
+                        origin,
+                    )
+                )
+                self._add_raw_result(key, value, origin)
         else:
             logging.debug(
                 u"Set \"{}\" for {} (origin: {})".format(
@@ -75,8 +96,14 @@ class NetworkTrafficParser:
                     origin,
                 )
             )
-            self._results[self._mac_addr][key] = value
+            self._add_raw_result(key, value, origin)
 
+    def _add_raw_result(self, key, value, origin):
+        if '_sources' not in self._results[self._mac_addr]:
+            self._results[self._mac_addr]['_sources'] = {}
+
+        self._results[self._mac_addr][key] = value
+        self._results[self._mac_addr]['_sources'][key] = origin
 
     def _add_dhcp_option_to_result(self, option_name):
         if self._get_dhcp_option(self._resp[DHCP].options, option_name):
@@ -99,13 +126,14 @@ class NetworkTrafficParser:
             return False
 
     def get_results(self):
-        return unicode(json.dumps(
-                        self._results,
-                        indent=4,
-                        ensure_ascii=False,
-                        sort_keys=True,
-                    )
-                )
+        return unicode(
+            json.dumps(
+                self._results,
+                indent=4,
+                ensure_ascii=False,
+                sort_keys=True,
+            )
+        )
 
     def load_from_json(self, filename):
         logging.info(u"Loading file {}".format(filename))
@@ -122,11 +150,15 @@ class NetworkTrafficParser:
         filename,
         hostname_prefix='',
         ip_prefix='',
-        include_ho_hostname=True,
+        include_ho_hostname=False,
+        files_d=None,
     ):
 
         logging.info(u"Saving results to ethers file {}".format(filename))
         with io.open(filename, 'w', encoding='utf-8') as f:
+            if files_d:
+                self.__run_parts_include(files_d, f)
+            # Maybe use IP address sorting? key=lambda item: socket.inet_aton(item[0])]
             for mac_addr in sorted(self._results):
                 if 'hostname' in self._results[mac_addr]:
                         f.write(unicode('{} {}\n'.format(
@@ -146,14 +178,60 @@ class NetworkTrafficParser:
                         )
                     )
 
+    def load_from_hosts_file(self, filename):
+        """With the current internal data representation (mac address is the key), this function does not make much sense."""
+        logging.info(u"Importing file {}".format(filename))
+        with io.open(filename, 'r', encoding='utf-8') as f:
+            for line in f:
+                if re.match(r'\s*#', line):
+                    continue
+
+                ip_addr, hostname = None, None
+                try:
+                    ip_addr, hostname = line.split()
+                except:
+                    logging.warning(u"Could not parse line: {}".format(line))
+                    continue
+
+                logging.debug(u'{}: {}'.format(ip_addr, hostname))
+
+                self._add_result(
+                    'ip_addr',
+                    ip_addr,
+                    'User hosts file',
+                )
+                self._add_result(
+                    'hostname',
+                    hostname,
+                    'User hosts file',
+                )
+
+    def __run_parts_include(self, dir_name, f):
+        if not os.path.isdir(dir_name):
+            logging.warning(u"{} is not a directory".format(dir_name))
+        else:
+            for dirname, dirnames, filenames in os.walk(dir_name):
+                for filename in filenames:
+                    include_file = os.path.join(dirname, filename)
+                    f.write(u"# Beginn of file \"{}\" {{{{{{\n".format(include_file))
+                    with io.open(include_file, 'r', encoding='utf-8') as s:
+                        f.write(s.read())
+                    f.write(u"# End of file \"{}\" }}}}}}\n".format(include_file))
+
+        f.write(u'\n')
+
     def save_as_hosts_file(
         self,
         filename,
         hostname_prefix='',
+        files_d=None,
     ):
 
         logging.info(u"Saving results to hosts file {}".format(filename))
         with io.open(filename, 'w', encoding='utf-8') as f:
+            f.write(u"# Do not edit this file. It can be regenerated by passive_network_broadcast_analyser\n")
+            if files_d:
+                self.__run_parts_include(files_d, f)
             for mac_addr in sorted(self._results):
                 if 'hostname' in self._results[mac_addr] and 'ip_addr' in self._results[mac_addr]:
                         f.write(unicode('{}\t{}\n'.format(
@@ -171,71 +249,74 @@ class NetworkTrafficParser:
     def parse(self, resp):
         self._resp = resp
 
-        self._mac_addr = self._resp[Ether].src
+        if not self._resp.haslayer(Ether):
+            # logging.debug(u"Found non Ethernet frame: {}".format(self._resp.summary()))
+            pass
+        else:
+            self._mac_addr = self._resp[Ether].src
 
-        if self._resp.haslayer(DHCP):
-            # Error checking {{{
-            if self._resp[BOOTP].hlen != 6:
-                logging.warning(
-                    u"Hardware address length is not 6 bytes as usual for Ethernet."
-                    " It is {}.".format(self._resp[BOOTP].hlen))
-            # }}}
+            if self._resp.haslayer(DHCP):
+                # Error checking {{{
+                if self._resp[BOOTP].hlen != 6:
+                    logging.warning(
+                        u"Hardware address length is not 6 bytes as usual for Ethernet."
+                        " It is {}.".format(self._resp[BOOTP].hlen))
+                # }}}
 
-            if not self._mac_addr in self._results:
-                self._results[self._mac_addr] = {
-                    'xid': self._resp[BOOTP].xid,
-                }
+                if self._mac_addr not in self._results:
+                    self._results[self._mac_addr] = {
+                        'xid': self._resp[BOOTP].xid,
+                    }
 
-            if self._packet_from_client():
-                logging.info(u"DHCP packet from client")
+                if self._packet_from_client():
+                    logging.info(u"DHCP packet from client")
 
-                self._add_dhcp_option_to_result('hostname')
-                if self._resp[BOOTP].yiaddr != '0.0.0.0':
-                    self._add_result(
-                        'ip_addr',
-                        self._resp[BOOTP].yiaddr,
-                        'bootp yiaddr',
-                    )
+                    self._add_dhcp_option_to_result('hostname')
+                    if self._resp[BOOTP].yiaddr != '0.0.0.0':
+                        self._add_result(
+                            'ip_addr',
+                            self._resp[BOOTP].yiaddr,
+                            'bootp yiaddr',
+                        )
+                    else:
+                        self._add_dhcp_option_to_result('requested_addr')
                 else:
-                    self._add_dhcp_option_to_result('requested_addr')
-            else:
-                logging.info(u"DHCP packet from server")
-                if self._resp[BOOTP].siaddr != '0.0.0.0':
+                    logging.info(u"DHCP packet from server")
+                    if self._resp[BOOTP].siaddr != '0.0.0.0':
+                        self._add_result(
+                            'ip_addr',
+                            self._resp[BOOTP].siaddr,
+                            'bootp siaddr',
+                        )
+
+                logging.info(
+                    u"Got DHCP {} from {}: {}, xid: {}".format(
+                        DHCPTypes[self._resp[DHCP].options[0][1]],
+                        'client' if self._packet_from_client() else 'server',
+                        self._mac_addr,
+                        hex(self._results[self._mac_addr]['xid']) if 'xid' in self._results[self._mac_addr] else 'None',
+                    )
+                )
+                # logging.info(self._resp[DHCP].options)
+                print('')
+            elif self._resp.haslayer(NBTDatagram):
+                # logging.info(u"Found NBTDatagram")
+                # print(self._resp[NBTDatagram].fields)
+                # print(self._resp[NBTDatagram].fields['SourceName'])
+                # print(self._resp[NBTDatagram].fields['SourceIP'])
+                if 'SourceName' in self._resp[NBTDatagram].fields:
+                    self._add_result(
+                        'hostname',
+                        self._resp[NBTDatagram].fields['SourceName'],
+                        'NETBIOS SourceName',
+                    )
+                if 'SourceIP' in self._resp[NBTDatagram].fields:
                     self._add_result(
                         'ip_addr',
-                        self._resp[BOOTP].siaddr,
-                        'bootp siaddr',
+                        self._resp[NBTDatagram].fields['SourceIP'],
+                        'NETBIOS SourceIP',
                     )
 
-
-            logging.info(
-                u"Got DHCP {} from {}: {}, xid: {}".format(
-                    DHCPTypes[self._resp[DHCP].options[0][1]],
-                    'client' if self._packet_from_client() else 'server',
-                    self._mac_addr,
-                    hex(self._results[self._mac_addr]['xid'])
-                )
-            )
-            # logging.info(self._resp[DHCP].options)
-            print('')
-        elif self._resp.haslayer(NBTDatagram):
-            # logging.info(u"Found NBTDatagram")
-            # print(self._resp[NBTDatagram].fields)
-            # print(self._resp[NBTDatagram].fields['SourceName'])
-            print(self._resp[NBTDatagram].fields['SourceIP'])
-            if 'SourceName' in self._resp[NBTDatagram].fields:
-                self._add_result(
-                    'hostname',
-                    self._resp[NBTDatagram].fields['SourceName'],
-                    'NETBIOS SourceName',
-                )
-            if 'SourceIP' in self._resp[NBTDatagram].fields:
-                print('testing')
-                self._add_result(
-                    'ip_addr',
-                    self._resp[NBTDatagram].fields['SourceIP'],
-                    'NETBIOS SourceIP',
-                )
 
 # main {{{
 if __name__ == '__main__':
@@ -279,10 +360,25 @@ if __name__ == '__main__':
         help=u"Save to ethers file.",
     )
     args.add_argument(
+        '-E',
+        '--ethers-file-d',
+        help=u"When saving to ethers file, paste in the contents of each file found in the given directory.",
+    )
+    args.add_argument(
         '-o',
         '--hosts-file',
-        help=u"Save to ethers file.",
+        help=u"Save to hosts file.",
     )
+    args.add_argument(
+        '-O',
+        '--hosts-file-d',
+        help=u"When saving to hosts file, paste in the contents of each file found in the given directory.",
+    )
+    # args.add_argument(
+    #     '-r',
+    #     '--import-hosts',
+    #     help=u"Import hosts file into JSON 'database'.",
+    # )
     args.add_argument(
         '-H',
         '--hostname-prefix',
@@ -299,7 +395,7 @@ if __name__ == '__main__':
         '-n',
         '--no-hostname',
         action='store_true',
-        default=True,
+        default=False,
         help=u"Include entries for hosts with no hostnames.",
     )
     user_parms = args.parse_args()
@@ -311,6 +407,12 @@ if __name__ == '__main__':
             n.load_from_json(user_parms.json_file)
         except:
             pass
+
+    # if user_parms.import_hosts:
+        # try:
+            # n.load_from_hosts_file(user_parms.import_hosts)
+        # except:
+            # pass
 
     if user_parms.interface:
         logging.info(u"Sniffing on {}.".format(user_parms.interface))
@@ -339,12 +441,13 @@ if __name__ == '__main__':
             hostname_prefix=user_parms.hostname_prefix,
             ip_prefix=user_parms.ip_prefix,
             include_ho_hostname=user_parms.no_hostname,
+            files_d=user_parms.ethers_file_d,
         )
 
     if user_parms.hosts_file:
         n.save_as_hosts_file(
             user_parms.hosts_file,
             hostname_prefix=user_parms.hostname_prefix,
+            files_d=user_parms.hosts_file_d,
         )
-
 # }}}
