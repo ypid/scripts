@@ -16,21 +16,29 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-Analyse broadcast network traffic and gather information about hosts contained in the dump.
+Analyse broadcast network traffic and gather information about hosts contained in the stream.
 Interesting information is the hostname, the mac address and the IP address.
 The data is gathered from DHCPv4 and Netbios traffic.
 This information is stored in an JSON file. Export options for /etc/hosts and /etc/ethers file format exist.
 """
 
-__version__ = '0.11'
+__version__ = '0.12'
 
 # modules {{{
+# std {{{
 import logging
 import json
 import io
 import os
 import re
+import signal
+import sys
+from time import strftime, time
+from datetime import datetime
 # from socket import inet_aton
+# }}}
+
+from prettytable import PrettyTable
 # }}}
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)  # Gets rid of IPV6 Error when importing scapy
@@ -45,6 +53,19 @@ logging.basicConfig(
 
 class NetworkTrafficParser:
     _results = dict()
+    _last_seen = dict()
+    _initial_time = None
+
+    def __init__(
+        self,
+        states_file=None,
+        timeout=15,
+    ):
+
+        self._states_file = None
+        if states_file:
+            self._states_file = io.open(states_file, 'w', encoding='utf-8')
+            self._timeout = timeout * 60  # in seconds
 
     def _packet_from_client(self):
         if self._resp.haslayer(BOOTP):
@@ -137,13 +158,17 @@ class NetworkTrafficParser:
 
     def load_from_json(self, filename):
         logging.info(u"Loading file {}".format(filename))
-        with io.open(filename, 'r', encoding='utf-8') as f:
-            self._results = json.load(f)
+        try:
+            with io.open(filename, 'r', encoding='utf-8') as f:
+                self._results = json.load(f)
+        except:
+            # self._results = {}
+            pass
 
     def save_as_json(self, filename):
         logging.info(u"Saving results to file {}".format(filename))
         with io.open(filename, 'w', encoding='utf-8') as f:
-            f.write(self.get_results())
+            f.write(self.get_results() + u'\n')
 
     def save_as_ethers_file(
         self,
@@ -161,17 +186,19 @@ class NetworkTrafficParser:
             # Maybe use IP address sorting? key=lambda item: socket.inet_aton(item[0])]
             for mac_addr in sorted(self._results):
                 if 'hostname' in self._results[mac_addr]:
-                        f.write(unicode('{} {}\n'.format(
-                            mac_addr,
-                            hostname_prefix + self._results[mac_addr]['hostname'],
+                        f.write(
+                            u'{} {}\n'.format(
+                                mac_addr,
+                                self._get_name_for_mac(mac_addr, hostname_prefix),
                             )
-                        ))
-                elif include_ho_hostname and 'ip_addr' in self._results[mac_addr]:
-                    f.write(unicode('{} {}\n'.format(
-                        mac_addr,
-                        ip_prefix + self._results[mac_addr]['ip_addr'],
                         )
-                    ))
+                elif include_ho_hostname and 'ip_addr' in self._results[mac_addr]:
+                    f.write(
+                        u'{} {}\n'.format(
+                            mac_addr,
+                            ip_prefix + self._results[mac_addr]['ip_addr'],
+                        )
+                    )
                 else:
                     logging.debug(u"No hostname for mac address {} found".format(
                         mac_addr,
@@ -220,6 +247,22 @@ class NetworkTrafficParser:
 
         f.write(u'\n')
 
+    def _get_ip_addr_for_mac(self, mac_addr, hostname_prefix=''):
+        if 'ip_addr' in self._results[mac_addr]:
+            return self._results[mac_addr]['ip_addr']
+        elif 'requested_addr' in self._results[mac_addr]:
+            return self._results[mac_addr]['requested_addr']
+        return u''
+
+    def _get_name_for_mac(self, mac_addr, hostname_prefix=''):
+        if 'hostname' in self._results[mac_addr]:
+            hostname = self._results[mac_addr]['hostname']
+            if '_description' in self._results[mac_addr]:
+                hostname = self._results[mac_addr]['_description'] + hostname_prefix + hostname
+            return hostname.replace(', ', '_').replace(' ', '_')
+        else:
+            return u''
+
     def save_as_hosts_file(
         self,
         filename,
@@ -234,17 +277,61 @@ class NetworkTrafficParser:
                 self.__run_parts_include(files_d, f)
             for mac_addr in sorted(self._results):
                 if 'hostname' in self._results[mac_addr] and 'ip_addr' in self._results[mac_addr]:
-                        f.write(unicode('{}\t{}\n'.format(
+                        f.write(u'{}\t{}\n'.format(
                             self._results[mac_addr]['ip_addr'],
-                            hostname_prefix + self._results[mac_addr]['hostname'],
+                            self._get_name_for_mac(mac_addr, hostname_prefix),
                             )
-                        ))
+                        )
                 else:
                     logging.debug(u"No {} for mac address {} found.".format(
                         'hostname' if 'hostname' in self._results[mac_addr] else 'ip_addr',
                         mac_addr,
                         )
                     )
+
+    def _write_stats_file(self):
+        columns = [
+            u"Hostname",
+            u"Last seen",
+            u"IP Address",
+            u"MAC address",
+        ]
+        table = PrettyTable(
+            columns,
+        )
+        for column in columns:
+            table.align[column] = "l"
+
+        hosts_included_in_last_seen = False
+        for mac_addr in self._last_seen:
+            if self._last_seen[mac_addr] < self._initial_time:
+                self._initial_time = self._last_seen[mac_addr]
+            if self._last_seen[mac_addr] - self._initial_time < self._timeout:
+                # logging.debug(u"In")
+                table.add_row([
+                    self._get_name_for_mac(mac_addr),
+                    datetime.fromtimestamp(self._last_seen[mac_addr]).strftime('%Y-%m-%d %H:%M:%S'),
+                    self._get_ip_addr_for_mac(mac_addr),
+                    mac_addr,
+                ])
+                hosts_included_in_last_seen = True
+            # else:
+                # logging.debug(u"Out")
+        if hosts_included_in_last_seen:
+            # print(chr(27) + "[2J")
+            print(table)
+            # print(u'\n')
+
+    def _update_last_seen(self):
+        if self._states_file:
+            if not self._initial_time:
+                self._initial_time = self._resp.time
+            if self._mac_addr in self._results:
+                # if self._mac_addr not in self._last_seen:
+                    # logging.debug(datetime.fromtimestamp(self._last_seen[self._mac_addr].strftime('%Y-%m-%d %H:%M:%S'))
+                    # logging.debug(datetime.fromtimestamp(int(self._resp.time)).strftime('%Y-%m-%d %H:%M:%S'))
+                self._last_seen[self._mac_addr] = int(self._resp.time)
+                self._write_stats_file()
 
     def parse(self, resp):
         self._resp = resp
@@ -269,7 +356,6 @@ class NetworkTrafficParser:
                     }
 
                 if self._packet_from_client():
-                    logging.info(u"DHCP packet from client")
 
                     self._add_dhcp_option_to_result('hostname')
                     if self._resp[BOOTP].yiaddr != '0.0.0.0':
@@ -281,7 +367,6 @@ class NetworkTrafficParser:
                     else:
                         self._add_dhcp_option_to_result('requested_addr')
                 else:
-                    logging.info(u"DHCP packet from server")
                     if self._resp[BOOTP].siaddr != '0.0.0.0':
                         self._add_result(
                             'ip_addr',
@@ -290,20 +375,17 @@ class NetworkTrafficParser:
                         )
 
                 logging.info(
-                    u"Got DHCP {} from {}: {}, xid: {}".format(
+                    u"Got DHCP {} from {}: mac {}, IP {}, xid: {}".format(
                         DHCPTypes[self._resp[DHCP].options[0][1]],
                         'client' if self._packet_from_client() else 'server',
                         self._mac_addr,
+                        self._get_ip_addr_for_mac(self._mac_addr),
                         hex(self._results[self._mac_addr]['xid']) if 'xid' in self._results[self._mac_addr] else 'None',
                     )
                 )
                 # logging.info(self._resp[DHCP].options)
                 print('')
             elif self._resp.haslayer(NBTDatagram):
-                # logging.info(u"Found NBTDatagram")
-                # print(self._resp[NBTDatagram].fields)
-                # print(self._resp[NBTDatagram].fields['SourceName'])
-                # print(self._resp[NBTDatagram].fields['SourceIP'])
                 if 'SourceName' in self._resp[NBTDatagram].fields:
                     self._add_result(
                         'hostname',
@@ -317,11 +399,36 @@ class NetworkTrafficParser:
                         'NETBIOS SourceIP',
                     )
 
+            self._update_last_seen()
+
+def do_final_stuff():
+    if user_parms.print_results:
+        print(n.get_results())
+
+    if user_parms.json_file:
+        n.save_as_json(user_parms.json_file)
+
+    if user_parms.ethers_file:
+        n.save_as_ethers_file(
+            user_parms.ethers_file,
+            hostname_prefix=user_parms.hostname_prefix,
+            ip_prefix=user_parms.ip_prefix,
+            include_ho_hostname=user_parms.no_hostname,
+            files_d=user_parms.ethers_file_d,
+        )
+
+    if user_parms.hosts_file:
+        n.save_as_hosts_file(
+            user_parms.hosts_file,
+            hostname_prefix=user_parms.hostname_prefix,
+            files_d=user_parms.hosts_file_d,
+        )
 
 # main {{{
 if __name__ == '__main__':
     from argparse import ArgumentParser
 
+    # Script Arguments {{{
     args = ArgumentParser(
         description=__doc__,
         # epilog=__doc__,
@@ -353,6 +460,20 @@ if __name__ == '__main__':
         action='store_true',
         default=False,
         help=u"Print results as JSON to stdout.",
+    )
+    args.add_argument(
+        '-l',
+        '--live',
+        help=u"Enter live mode."
+             " Show all devices which are currently online."
+             " This parameter excepts a filename to which the last seen times will be written.",
+    )
+    args.add_argument(
+        '-t',
+        '--timeout',
+        default=15,
+        help=u"Timeout in minutes for live mode."
+             " Only consider devices as online, when a packet was received in the last n minutes.",
     )
     args.add_argument(
         '-e',
@@ -399,20 +520,27 @@ if __name__ == '__main__':
         help=u"Include entries for hosts with no hostnames.",
     )
     user_parms = args.parse_args()
+    # }}}
 
-    n = NetworkTrafficParser()
+    def signal_handler(signal, frame):
+        print(u"\nGot SIGINT …")
+        do_final_stuff()
+        sys.exit(0)
+    signal.signal(signal.SIGINT, signal_handler)
+
+    n = NetworkTrafficParser(
+        states_file=user_parms.live,
+        timeout=user_parms.timeout,
+    )
 
     if user_parms.json_file:
-        try:
-            n.load_from_json(user_parms.json_file)
-        except:
-            pass
+        n.load_from_json(user_parms.json_file)
 
     # if user_parms.import_hosts:
-        # try:
-            # n.load_from_hosts_file(user_parms.import_hosts)
-        # except:
-            # pass
+    #     try:
+    #         n.load_from_hosts_file(user_parms.import_hosts)
+    #     except:
+    #         pass
 
     if user_parms.interface:
         logging.info(u"Sniffing on {}.".format(user_parms.interface))
@@ -429,25 +557,5 @@ if __name__ == '__main__':
             offline=user_parms.file
         )
 
-    if user_parms.print_results:
-        print(n.get_results())
-
-    if user_parms.json_file:
-        n.save_as_json(user_parms.json_file)
-
-    if user_parms.ethers_file:
-        n.save_as_ethers_file(
-            user_parms.ethers_file,
-            hostname_prefix=user_parms.hostname_prefix,
-            ip_prefix=user_parms.ip_prefix,
-            include_ho_hostname=user_parms.no_hostname,
-            files_d=user_parms.ethers_file_d,
-        )
-
-    if user_parms.hosts_file:
-        n.save_as_hosts_file(
-            user_parms.hosts_file,
-            hostname_prefix=user_parms.hostname_prefix,
-            files_d=user_parms.hosts_file_d,
-        )
+    do_final_stuff()
 # }}}
