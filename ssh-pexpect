@@ -29,6 +29,7 @@ import re
 import pexpect
 from ConfigParser import ConfigParser
 
+
 class SshExcept:
     _pexepct_password_re = '[Pp]assword:'
     _pexepct_hostname = r'\w+[>#]'
@@ -52,7 +53,7 @@ class SshExcept:
         self._login_passwd = login_passwd
         self._enable_passwd = enable_passwd
         self._command = command
-        self._interative = interactive
+        self._interactive = interactive
         self._timeout = timeout
 
         self._session = None
@@ -65,7 +66,10 @@ class SshExcept:
     def login(self):
 
         self._session = pexpect.spawn('ssh {0}'.format(self._hostname), timeout=self._timeout, logfile=self._logfile)
-        index = self._session.expect([self._pexepct_password_re, 'Are you sure you want to continue connecting (yes/no)?'])
+        index = self._session.expect([
+            self._pexepct_password_re,
+            'Are you sure you want to continue connecting (yes/no)?'
+        ])
         if index == 1:
             self._session.sendline('yes')
             self._session.expect(self._pexepct_password_re)
@@ -80,7 +84,7 @@ class SshExcept:
         if self._command:
             self.run_commands(self._command)
 
-        if self._interative:
+        if self._interactive:
             self._session.interact()
 
     def run_commands(self, commands):
@@ -106,6 +110,7 @@ class SshExcept:
         self._session.sendline(self._cisco_end_command)
         self._session.close()
         self._session.kill('SIGKILL')
+
 
 def main(args):
 

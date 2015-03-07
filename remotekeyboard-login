@@ -1,0 +1,18 @@
+#!/bin/bash
+# See https://github.com/onyxbits/remotekeyboard/issues/4#issuecomment-52207372
+
+HOSTNAME="$1"
+TELNET_PORT="2323"
+
+if [ -z "$HOSTNAME" ]; then
+    echo "Please enter the hostname of the device running ssh and remotekeyboard."
+    exit 1
+fi
+
+# netstat -lnt | awk '$6 == "LISTEN" && $4 ~ ".2323"'
+if ! nc -z localhost "$TELNET_PORT"; then
+    ssh -fNT -L2323:localhost:2323 "$HOSTNAME"
+fi
+
+## https://github.com/ypid/scripts/blob/master/telnet-login
+telnet-login -p "$TELNET_PORT" -P "$remotekeyboard" localhost

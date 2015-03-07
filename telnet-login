@@ -1,0 +1,168 @@
+#!/usr/bin/env python
+# encoding: utf-8
+# @licence AGPLv3 <https://www.gnu.org/licenses/agpl-3.0.html>
+# @author Copyright (C) 2015 Robin Schneider <ypid@riseup.net>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, version 3 of the
+# License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+Telnet login script.
+"""
+
+__version__ = '0.8'
+
+import pexpect
+
+
+class TelnetLogin:
+    _pexepct_password_re = '[Pp]assword:'
+
+    def __init__(
+        self,
+        hostname,
+        port=23,
+        login_passwd='password',
+        command=None,
+        interactive=False,
+        timeout=10,
+        logfile=None,
+        logfile_flush=False,
+    ):
+
+        self._hostname = hostname
+        self._port = port
+        self._login_passwd = login_passwd
+        self._command = command
+        self._interactive = interactive
+        self._timeout = timeout
+
+        self._session = None
+
+        self._logfile = None
+        self._logfile_flush = logfile_flush
+        if logfile:
+            self._logfile = open(logfile, 'a')
+
+    def login(self):
+
+        self._session = pexpect.spawn(
+            'telnet {0} {1}'.format(self._hostname, self._port),
+            timeout=self._timeout,
+        )
+        self._session.expect(self._pexepct_password_re)
+        self._session.sendline(self._login_passwd)
+
+        if self._command:
+            self.run_commands(self._command)
+
+        if self._interactive:
+            self._session.interact(
+                input_filter=self._input_filter
+            )
+
+    def _write_to_logfile(self, content):
+        if self._logfile:
+            self._logfile.write(content)
+        if self._logfile_flush:
+            self._logfile.flush
+
+    def _input_filter(self, user_input):
+        self._write_to_logfile(user_input)
+        return user_input
+
+    def run_commands(self, commands):
+        self._write_to_logfile(commands)
+        self._session.sendline(commands)
+
+    def end(self):
+
+        # self._session.sendline('^D')
+        self._session.close()
+        self._session.kill('SIGKILL')
+
+
+def main(args):
+
+    telnet = TelnetLogin(
+        args.hostname,
+        port=args.port,
+        login_passwd=args.password,
+        command=args.command,
+        interactive=not args.no_interactive,
+        timeout=args.timeout,
+        logfile=args.logfile,
+        logfile_flush=args.logfile_flush,
+    )
+    telnet.login()
+    telnet.end()
+
+if __name__ == '__main__':
+    from argparse import ArgumentParser
+    args = ArgumentParser(
+        description=u"Autologin for telnet.",
+        epilog=__doc__,
+    )
+    args.add_argument(
+        '-V',
+        '--version',
+        action='version',
+        version='%(prog)s {version}'.format(version=__version__),
+    )
+    args.add_argument(
+        'hostname',
+        help=u"hostname (is just passed to the ssh command)",
+    )
+    args.add_argument(
+        '-p',
+        '--port',
+        help=u"tcp Port on which telnet is listening.",
+    )
+    args.add_argument(
+        '-n',
+        '--no-interactive',
+        action='store_true',
+        default=False,
+        help=u"Not enter interactive mode.",
+    )
+    args.add_argument(
+        '-c',
+        '--command',
+        help=u"Commands to run",
+    )
+    args.add_argument(
+        '-P',
+        '--password',
+        help=u"Telnet password.",
+    )
+    args.add_argument(
+        '-l',
+        '--logfile',
+        help=u"Set logfile for line input.",
+    )
+    args.add_argument(
+        '-f',
+        '--logfile-flush',
+        action='store_true',
+        default=False,
+        help=u"Flush logfile buffer on every opportunity.",
+    )
+    args.add_argument(
+        '-t',
+        '--timeout',
+        type=int,
+        default=10,
+        help=u"Set timeout",
+    )
+    user_parms = args.parse_args()
+
+    main(user_parms)

@@ -21,7 +21,9 @@
 repo_name="`git remote --verbose | grep '^origin' | head --lines=1 | perl -lne 'm#(?:(?<username>\w)/|://([^/]*/){2})(?<repo_name>[^ ]*?)(\.git| )# && print $+{repo_name}'`"
 echo "### Your repo is at: https://github.com/${GITHUB_USER}/${repo_name}"
 
-if [ "$1" != '-n' ]; then
+if [ "$1" == '-p' ]; then
     git remote add my "${GITHUB_USER}.github.com:${GITHUB_USER}/${repo_name}.git"
     git push --set-upstream my
+else
+    echo 'Use -p for push.'
 fi
