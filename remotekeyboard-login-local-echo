@@ -1,0 +1,26 @@
+#!/bin/bash
+## @licence AGPLv3 <https://www.gnu.org/licenses/agpl-3.0.html>
+## @author Copyright (C) 2015 Robin Schneider <ypid@riseup.net>
+## It sets up a ssh Port forwarding, connects via telnet and enters the password
+## for the remotekeyboard on Android. See: https://github.com/onyxbits/remotekeyboard
+##
+## The password is expected to be in the environment variable remotekeyboard.
+## See also: https://github.com/onyxbits/remotekeyboard/issues/4#issuecomment-52207372
+
+HOSTNAME="$1"
+TELNET_PORT="2323"
+ECHO_PORT="2342"
+
+if [ -z "$HOSTNAME" ]; then
+    echo "Please enter the hostname of the device running ssh and remotekeyboard."
+    exit 1
+fi
+
+if ! nc -z localhost "$TELNET_PORT"; then
+    ssh -fNT -L$TELNET_PORT:localhost:$TELNET_PORT "$HOSTNAME"
+fi
+
+tmux split-window "ncat -t -l $ECHO_PORT"
+
+## https://github.com/ypid/scripts/blob/master/telnet-login
+telnet-login --port $TELNET_PORT --password "$remotekeyboard" --log-to-socket localhost:$ECHO_PORT localhost

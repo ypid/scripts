@@ -22,6 +22,7 @@ Telnet login script.
 __version__ = '0.8'
 
 import pexpect
+import socket
 
 
 class TelnetLogin:
@@ -36,7 +37,8 @@ class TelnetLogin:
         interactive=False,
         timeout=10,
         logfile=None,
-        logfile_flush=False,
+        logfile_buffered=True,
+        log_to_socket=None,
     ):
 
         self._hostname = hostname
@@ -49,9 +51,24 @@ class TelnetLogin:
         self._session = None
 
         self._logfile = None
-        self._logfile_flush = logfile_flush
+        self._logfile_buffered = logfile_buffered
         if logfile:
-            self._logfile = open(logfile, 'a')
+            if self._logfile_buffered:
+                self._logfile = open(logfile, 'a')
+            else:
+                self._logfile = open(logfile, 'a', 0)
+            self._logfile.write(u'\n')
+
+        self._log_to_socket = None
+        if log_to_socket:
+            self._log_to_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            log_to_socket_addr = log_to_socket.split(':')
+            try:
+                self._log_to_socket.connect(
+                    (log_to_socket_addr[0], int(log_to_socket_addr[1]))
+                )
+            except socket.error as err:
+                raise Exception(u"{}. You can use nc or ncat to listen on a socket like this: 'nc -l 23'.".format(err))
 
     def login(self):
 
@@ -73,11 +90,14 @@ class TelnetLogin:
     def _write_to_logfile(self, content):
         if self._logfile:
             self._logfile.write(content)
-        if self._logfile_flush:
-            self._logfile.flush
+        if self._log_to_socket:
+            self._log_to_socket.send(content)
 
     def _input_filter(self, user_input):
-        self._write_to_logfile(user_input)
+        if user_input == '\n':
+            self._write_to_logfile(u'\nhellp')
+        else:
+            self._write_to_logfile(user_input)
         return user_input
 
     def run_commands(self, commands):
@@ -101,7 +121,8 @@ def main(args):
         interactive=not args.no_interactive,
         timeout=args.timeout,
         logfile=args.logfile,
-        logfile_flush=args.logfile_flush,
+        logfile_buffered=args.logfile_buffered,
+        log_to_socket=args.log_to_socket,
     )
     telnet.login()
     telnet.end()
@@ -150,11 +171,17 @@ if __name__ == '__main__':
         help=u"Set logfile for line input.",
     )
     args.add_argument(
+        '-s',
+        '--log-to-socket',
+        help=u"Send input to the given tcp socket. Example is localhost:2342.",
+    )
+    args.add_argument(
         '-f',
-        '--logfile-flush',
+        '--logfile-buffered',
         action='store_true',
         default=False,
-        help=u"Flush logfile buffer on every opportunity.",
+        help=u"By default (for this script), no buffer is being used for the log file."
+            u" This option enables buffered writes again.",
     )
     args.add_argument(
         '-t',
