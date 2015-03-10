@@ -13,7 +13,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""Check the GPG fingerprints on my homepage if there are the correct ones."""
+"""
+Check the GPG fingerprints on my homepage if they are the correct ones.
+"""
 
 __version__ = '0.9'
 
