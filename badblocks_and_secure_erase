@@ -1,0 +1,55 @@
+#!/bin/bash
+## Run badblocks on a cryptsetup layer.
+## Badblocks random will write a repetitive pattern of 2 * 64 * 1024
+## (2 * blocks_at_once * block_size) by default and compare each "page" against
+## this random pattern. This means that badblocks is not intended for secure
+## erasing by itself. Thats why I combined it with cryptsetup in this script.
+##
+## @licence AGPLv3 <https://www.gnu.org/licenses/agpl-3.0.html>
+## @author Copyright (C) 2015 Robin Schneider <ypid@riseup.net>
+##
+## This program is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Affero General Public License as
+## published by the Free Software Foundation, version 3 of the
+## License.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU Affero General Public License for more details.
+##
+## You should have received a copy of the GNU Affero General Public License
+## along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+dev="$1"
+if [ ! -b "$dev" ]; then
+    echo "Please give a device path as first parameter." >&2
+    exit 1
+fi
+
+cryptsetup_dev_name="tmp_delete"
+cryptsetup_dev_path="/dev/mapper/$cryptsetup_dev_name"
+
+if [ -b "$cryptsetup_dev_path" ]; then
+    echo "Cannot format device $dev which is still in use." >&2
+    echo "You might want to run: cryptsetup luksClose $cryptsetup_dev_name" >&2
+    exit 1
+fi
+
+echo -n "Are you sure to securely erase *all* data on $dev and test the device with badblocks? (Type uppercase yes): "
+read erase
+if [ "$erase" != 'YES' ]; then
+    exit 1
+fi
+
+random_key="`dd if=/dev/random bs=32 count=1 iflag=fullblock 2>/dev/null | base64`"
+
+## --iter-time set to one millisecond because the LUKS header and the
+## key-slot area are destroyed afterwards.
+printf '%s\n' "$random_key" | cryptsetup --iter-time 1 --hash sha512 --key-size 512 luksFormat "$dev" \
+    && printf '%s\n' "$random_key" | cryptsetup luksOpen "$dev" "$cryptsetup_dev_name" \
+    && badblocks -wsv -t random "$cryptsetup_dev_path" \
+    && sync \
+    && cryptsetup luksClose "$cryptsetup_dev_name" \
+    && cryptsetup luksErase "$dev" \
+    && dd if=/dev/urandom bs=1024 count=10 iflag=fullblock of="$dev"
