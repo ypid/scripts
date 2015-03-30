@@ -152,6 +152,7 @@ class NetworkTrafficParser:
                 indent=4,
                 ensure_ascii=False,
                 sort_keys=True,
+                separators=(',', ':'),
             )
         )
 
@@ -384,15 +385,28 @@ class NetworkTrafficParser:
                             'bootp siaddr',
                         )
 
-                logging.info(
-                    u"Got DHCP {} from {}: mac {}, IP {}, xid: {}".format(
-                        DHCPTypes[self._resp[DHCP].options[0][1]],
-                        'client' if self._packet_from_client() else 'server',
-                        self._mac_addr,
-                        self._get_ip_addr_for_mac(self._mac_addr),
-                        hex(self._results[self._mac_addr]['xid']) if 'xid' in self._results[self._mac_addr] else 'None',
+                if self._resp[DHCP].options[0][1] in DHCPTypes:
+                    logging.info(
+                        u"Got DHCP {} (code: {}) from {}: mac {}, IP {}, xid: {}".format(
+                            DHCPTypes[self._resp[DHCP].options[0][1]],
+                            self._resp[DHCP].options[0][1],
+                            'client' if self._packet_from_client() else 'server',
+                            self._mac_addr,
+                            self._get_ip_addr_for_mac(self._mac_addr),
+                            hex(self._results[self._mac_addr]['xid']) if 'xid' in self._results[self._mac_addr] else 'None',
+                        )
                     )
-                )
+                else:
+                    logging.debug(
+                        u"Got DHCP with unknown code (probably plain BOOTP, ignoring): {}, {}, {}".format(
+                            self._resp[DHCP].options[0][1],
+                            self._mac_addr,
+                            self._resp[DHCP].options,
+                        )
+                    )
+                    logging.debug(u"Details: {}".format(self._resp.summary()))
+                    # sys.exit(1)
+
                 # logging.info(self._resp[DHCP].options)
                 print('')
             elif self._resp.haslayer(NBTDatagram):
