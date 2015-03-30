@@ -50,6 +50,7 @@ printf '%s\n' "$random_key" | cryptsetup --iter-time 1 --hash sha512 --key-size 
     && printf '%s\n' "$random_key" | cryptsetup luksOpen "$dev" "$cryptsetup_dev_name" \
     && badblocks -wsv -t random "$cryptsetup_dev_path" \
     && sync \
+    && sleep 2 \
     && cryptsetup luksClose "$cryptsetup_dev_name" \
     && cryptsetup luksErase "$dev" \
     && dd if=/dev/urandom bs=1024 count=10 iflag=fullblock of="$dev"

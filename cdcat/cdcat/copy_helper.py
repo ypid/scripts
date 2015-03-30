@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # encoding: utf-8
 # @author Robin Schneider <ypid23@aol.de>
 # @licence GPLv3 <http://www.gnu.org/licenses/gpl.html>
