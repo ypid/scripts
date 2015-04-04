@@ -23,9 +23,10 @@
 
 dev="$1"
 if [ ! -b "$dev" ]; then
-    echo "Please give a device path as first parameter." >&2
+    echo "Usage: $0 device_path [badblocks_parameter]" >&2
     exit 1
 fi
+shift
 
 cryptsetup_dev_name="tmp_delete"
 cryptsetup_dev_path="/dev/mapper/$cryptsetup_dev_name"
@@ -48,7 +49,7 @@ random_key="`dd if=/dev/random bs=32 count=1 iflag=fullblock 2>/dev/null | base6
 ## key-slot area are destroyed afterwards.
 printf '%s\n' "$random_key" | cryptsetup --iter-time 1 --hash sha512 --key-size 512 luksFormat "$dev" \
     && printf '%s\n' "$random_key" | cryptsetup luksOpen "$dev" "$cryptsetup_dev_name" \
-    && badblocks -wsv -t random "$cryptsetup_dev_path" \
+    && badblocks -wsv -t random "$cryptsetup_dev_path" $@ \
     && sync \
     && sleep 2 \
     && cryptsetup luksClose "$cryptsetup_dev_name" \
