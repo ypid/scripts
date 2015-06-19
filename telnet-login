@@ -15,18 +15,19 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Telnet login script.
 """
 
-__version__ = '0.8'
+__version__ = '0.9'
 
 import pexpect
 import socket
 
 
 class TelnetLogin:
-    _pexepct_password_re = '[Pp]assword:'
+    _PEXEPCT_PASSWORD_RE = '[Pp]assword:'
 
     def __init__(
         self,
@@ -76,7 +77,7 @@ class TelnetLogin:
             'telnet {0} {1}'.format(self._hostname, self._port),
             timeout=self._timeout,
         )
-        self._session.expect(self._pexepct_password_re)
+        self._session.expect(self._PEXEPCT_PASSWORD_RE)
         self._session.sendline(self._login_passwd)
 
         if self._command:
@@ -181,7 +182,7 @@ if __name__ == '__main__':
         action='store_true',
         default=False,
         help=u"By default (for this script), no buffer is being used for the log file."
-            u" This option enables buffered writes again.",
+        u" This option enables buffered writes again.",
     )
     args.add_argument(
         '-t',

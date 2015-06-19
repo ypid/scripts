@@ -43,13 +43,6 @@ from prettytable import PrettyTable
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)  # Gets rid of IPV6 Error when importing scapy
 from scapy.all import Ether, BOOTP, DHCP, DHCPTypes, NBTDatagram, sniff
 
-logging.basicConfig(
-    format='%(levelname)s: %(message)s',
-    level=logging.DEBUG,
-    # level=logging.INFO,
-)
-
-
 class NetworkTrafficParser:
     _results = dict()
     _last_seen = dict()
@@ -173,6 +166,7 @@ class NetworkTrafficParser:
     def save_as_ethers_file(
         self,
         filename,
+        name_prefix='',
         hostname_prefix='',
         ip_prefix='',
         include_ho_hostname=False,
@@ -190,7 +184,7 @@ class NetworkTrafficParser:
                         f.write(
                             u'{} {}\n'.format(
                                 mac_addr,
-                                self._get_name_for_mac(mac_addr, hostname_prefix),
+                                self._get_name_for_mac(mac_addr, name_prefix, hostname_prefix),
                             )
                         )
                 elif include_ho_hostname and 'ip_addr' in self._results[mac_addr]:
@@ -252,18 +246,18 @@ class NetworkTrafficParser:
 
         f.write(u'\n')
 
-    def _get_ip_addr_for_mac(self, mac_addr, hostname_prefix=''):
+    def _get_ip_addr_for_mac(self, mac_addr):
         if 'ip_addr' in self._results[mac_addr]:
             return self._results[mac_addr]['ip_addr']
         elif 'requested_addr' in self._results[mac_addr]:
             return self._results[mac_addr]['requested_addr']
         return u''
 
-    def _get_name_for_mac(self, mac_addr, hostname_prefix=''):
+    def _get_name_for_mac(self, mac_addr, name_prefix='', hostname_prefix=''):
         if 'hostname' in self._results[mac_addr]:
             hostname = self._results[mac_addr]['hostname']
             if '_description' in self._results[mac_addr]:
-                hostname = self._results[mac_addr]['_description'] + hostname_prefix + hostname
+                hostname = name_prefix + self._results[mac_addr]['_description'] + hostname_prefix + hostname
             return hostname.replace(', ', '_').replace(' ', '_')
         else:
             return u''
@@ -271,6 +265,7 @@ class NetworkTrafficParser:
     def save_as_hosts_file(
         self,
         filename,
+        name_prefix='',
         hostname_prefix='',
         files_d=None,
     ):
@@ -285,7 +280,7 @@ class NetworkTrafficParser:
                 if 'hostname' in self._results[mac_addr] and 'ip_addr' in self._results[mac_addr]:
                         f.write(u'{}\t{}\n'.format(
                             self._results[mac_addr]['ip_addr'],
-                            self._get_name_for_mac(mac_addr, hostname_prefix),
+                            self._get_name_for_mac(mac_addr, name_prefix, hostname_prefix),
                             )
                         )
                 else:
@@ -427,26 +422,28 @@ class NetworkTrafficParser:
 
 
 def do_final_stuff():
-    if user_parms.print_results:
+    if args.print_results:
         print(n.get_results())
 
-    if user_parms.json_file:
-        n.save_as_json(user_parms.json_file)
+    if args.json_file:
+        n.save_as_json(args.json_file)
 
-    if user_parms.ethers_file:
+    if args.ethers_file:
         n.save_as_ethers_file(
-            user_parms.ethers_file,
-            hostname_prefix=user_parms.hostname_prefix,
-            ip_prefix=user_parms.ip_prefix,
-            include_ho_hostname=user_parms.no_hostname,
-            files_d=user_parms.ethers_file_d,
+            args.ethers_file,
+            name_prefix=args.name_prefix,
+            hostname_prefix=args.hostname_prefix,
+            ip_prefix=args.ip_prefix,
+            include_ho_hostname=args.no_hostname,
+            files_d=args.ethers_file_d,
         )
 
-    if user_parms.hosts_file:
+    if args.hosts_file:
         n.save_as_hosts_file(
-            user_parms.hosts_file,
-            hostname_prefix=user_parms.hostname_prefix,
-            files_d=user_parms.hosts_file_d,
+            args.hosts_file,
+            name_prefix=args.name_prefix,
+            hostname_prefix=args.hostname_prefix,
+            files_d=args.hosts_file_d,
         )
 
 # main {{{
@@ -454,97 +451,108 @@ if __name__ == '__main__':
     from argparse import ArgumentParser
 
     # Script Arguments {{{
-    args = ArgumentParser(
+    args_parser = ArgumentParser(
         description=__doc__,
         # epilog=__doc__,
     )
-    args.add_argument(
-        '-V',
-        '--version',
+    args_parser.add_argument(
+        '-V', '--version',
         action='version',
         version='%(prog)s {version}'.format(version=__version__)
     )
-    args.add_argument(
-        '-i',
-        '--interface',
+    args_parser.add_argument(
+        '-d', '--debug',
+        help="Print lots of debugging statements",
+        action="store_const", dest="loglevel", const=logging.DEBUG,
+        default=logging.WARNING,
+    )
+    args_parser.add_argument(
+        '-v', '--verbose',
+        help="Be verbose",
+        action="store_const", dest="loglevel", const=logging.INFO,
+    )
+    args_parser.add_argument(
+        '-i', '--interface',
         help=u"Interface name to sniff on.",
     )
-    args.add_argument(
-        '-f',
-        '--file',
+    args_parser.add_argument(
+        '-f', '--file',
         help=u"Pcap file to read as input.",
     )
-    args.add_argument(
-        '-j',
-        '--json-file',
+    args_parser.add_argument(
+        '-j', '--json-file',
         help=u"Load/save results in a JSON file.",
     )
-    args.add_argument(
-        '-p',
-        '--print-results',
+    args_parser.add_argument(
+        '-p', '--print-results',
         action='store_true',
         default=False,
         help=u"Print results as JSON to stdout.",
     )
-    args.add_argument(
-        '-l',
-        '--live',
+    args_parser.add_argument(
+        '-l', '--live',
         help=u"Enter live mode."
              " Show all devices which are currently online."
              " This parameter excepts a filename to which the last seen times will be written.",
     )
-    args.add_argument(
-        '-t',
-        '--timeout',
+    args_parser.add_argument(
+        '-t', '--timeout',
         default=15,
         help=u"Timeout in minutes for live mode."
              " Only consider devices as online, when a packet was received in the last n minutes.",
     )
-    args.add_argument(
-        '-e',
-        '--ethers-file',
+    args_parser.add_argument(
+        '-e', '--ethers-file',
         help=u"Save to ethers file.",
     )
-    args.add_argument(
-        '-E',
-        '--ethers-file-d',
+    args_parser.add_argument(
+        '-E', '--ethers-file-d',
         help=u"When saving to ethers file, paste in the contents of each file found in the given directory.",
     )
-    args.add_argument(
-        '-o',
-        '--hosts-file',
+    args_parser.add_argument(
+        '-o', '--hosts-file',
         help=u"Save to hosts file.",
     )
-    args.add_argument(
-        '-O',
-        '--hosts-file-d',
+    args_parser.add_argument(
+        '-O', '--hosts-file-d',
         help=u"When saving to hosts file, paste in the contents of each file found in the given directory.",
     )
-    # args.add_argument(
+    # args_parser.add_argument(
     #     '-r',
     #     '--import-hosts',
     #     help=u"Import hosts file into JSON 'database'.",
     # )
-    args.add_argument(
-        '-H',
-        '--hostname-prefix',
+    args_parser.add_argument(
+        '-H', '--hostname-prefix',
         default='',
-        help=u"Hostname prefix for ethers file.",
+        help=u"Hostname prefix for ethers file."
+        u"Not that the prefix is between the hostname and the description if available.",
     )
-    args.add_argument(
-        '-P',
-        '--ip-prefix',
+    args_parser.add_argument(
+        '-N', '--name-prefix',
+        default='',
+        help=u"Name prefix for ethers file."
+        u"This prefix is in front of the name even if a description is available.",
+    )
+    args_parser.add_argument(
+        '-P', '--ip-prefix',
         default='',
         help=u"IP Address prefix for ethers file.",
     )
-    args.add_argument(
-        '-n',
-        '--no-hostname',
+    args_parser.add_argument(
+        '-n', '--no-hostname',
         action='store_true',
         default=False,
         help=u"Include entries for hosts with no hostnames.",
     )
-    user_parms = args.parse_args()
+    args = args_parser.parse_args()
+    logger = logging.getLogger(__file__)
+    logging.basicConfig(
+        format='%(levelname)s: %(message)s',
+        level=args.loglevel,
+        # level=logging.DEBUG,
+        # level=logging.INFO,
+    )
     # }}}
 
     def signal_handler(signal, frame):
@@ -554,32 +562,32 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, signal_handler)
 
     n = NetworkTrafficParser(
-        states_file=user_parms.live,
-        timeout=user_parms.timeout,
+        states_file=args.live,
+        timeout=args.timeout,
     )
 
-    if user_parms.json_file:
-        n.load_from_json(user_parms.json_file)
+    if args.json_file:
+        n.load_from_json(args.json_file)
 
-    # if user_parms.import_hosts:
+    # if args.import_hosts:
     #     try:
-    #         n.load_from_hosts_file(user_parms.import_hosts)
+    #         n.load_from_hosts_file(args.import_hosts)
     #     except:
     #         pass
 
-    if user_parms.interface:
-        logging.info(u"Sniffing on {}.".format(user_parms.interface))
+    if args.interface:
+        logging.info(u"Sniffing on {}.".format(args.interface))
         sniff(
             filter="udp and (port 67 or 68)",
             prn=n.parse,
-            iface=user_parms.interface
+            iface=args.interface
         )
 
-    if user_parms.file:
+    if args.file:
         sniff(
             filter="udp and (port 67 or 68)",
             prn=n.parse,
-            offline=user_parms.file
+            offline=args.file
         )
 
     do_final_stuff()

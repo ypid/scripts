@@ -13,6 +13,6 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-git log --show-signature --max-count=100 | grep 'RSA key ID' | cut -d' ' -f 15 | sort -u | while read keyID; do
+git log --show-signature --max-count=100 | grep 'RSA key' | sed 's/^.*using rsa key //i' | sort -u | while read keyID; do
     gpg --recv-keys "$keyID"
 done

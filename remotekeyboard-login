@@ -1,7 +1,7 @@
 #!/bin/bash
 ## @licence AGPLv3 <https://www.gnu.org/licenses/agpl-3.0.html>
 ## @author Copyright (C) 2015 Robin Schneider <ypid@riseup.net>
-## It sets up a ssh Port forwarding, connects via telnet and enters the password
+## It sets up SSH port forwarding, connects via telnet and enters the password
 ## for the remotekeyboard on Android. See: https://github.com/onyxbits/remotekeyboard
 ##
 ## The password is expected to be in the environment variable remotekeyboard.
@@ -17,6 +17,7 @@ fi
 
 # netstat -lnt | awk '$6 == "LISTEN" && $4 ~ ".2323"'
 if ! nc -z localhost "$TELNET_PORT"; then
+    # ip6-localhost
     if ! ssh -fNT -L$TELNET_PORT:localhost:$TELNET_PORT "$HOSTNAME"; then
         echo "Could not establish port forwarding via ssh."
         exit 1
