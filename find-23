@@ -1,10 +1,16 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 use strict;
 use warnings;
 use autodie;
-use 5.010;
+use feature qw(say);
+use utf8;
+use experimental 'smartmatch';
+use open qw(:std :utf8);
+binmode STDOUT, ':encoding(UTF-8)';
+
 use Term::ANSIColor;
 use Const::Fast;
+
 const my @special_numbers => 23, 42;
 const my $text => join q{ }, @ARGV;
 

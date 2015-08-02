@@ -21,37 +21,40 @@
 ## You should have received a copy of the GNU Affero General Public License
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+set -e
+set -o pipefail
+
 dev="$1"
-if [ ! -b "$dev" ]; then
+cryptsetup_dev_name="tmp_delete"
+cryptsetup_dev_path="/dev/mapper/$cryptsetup_dev_name"
+
+if [ ! -b "$dev" ]
+then
     echo "Usage: $0 device_path [badblocks_parameter]" >&2
     exit 1
 fi
 shift
 
-cryptsetup_dev_name="tmp_delete"
-cryptsetup_dev_path="/dev/mapper/$cryptsetup_dev_name"
-
-if [ -b "$cryptsetup_dev_path" ]; then
+if [ -b "$cryptsetup_dev_path" ]
+then
     echo "Cannot format device $dev which is still in use." >&2
-    echo "You might want to run: cryptsetup luksClose $cryptsetup_dev_name" >&2
+    echo "You might want to run:" >&2
+    echo "cryptsetup close $cryptsetup_dev_name" >&2
     exit 1
 fi
 
 echo -n "Are you sure to securely erase *all* data on $dev and test the device with badblocks? (Type uppercase yes): "
 read erase
-if [ "$erase" != 'YES' ]; then
+if [ "$erase" != 'YES' ]
+then
     exit 1
 fi
 
-random_key="`dd if=/dev/random bs=32 count=1 iflag=fullblock 2>/dev/null | base64`"
-
-## --iter-time set to one millisecond because the LUKS header and the
-## key-slot area are destroyed afterwards.
-printf '%s\n' "$random_key" | cryptsetup --iter-time 1 --hash sha512 --key-size 512 luksFormat "$dev" \
-    && printf '%s\n' "$random_key" | cryptsetup luksOpen "$dev" "$cryptsetup_dev_name" \
-    && badblocks -wsv -t random "$cryptsetup_dev_path" $@ \
-    && sync \
-    && sleep 2 \
-    && cryptsetup luksClose "$cryptsetup_dev_name" \
-    && cryptsetup luksErase "$dev" \
-    && dd if=/dev/urandom bs=1024 count=10 iflag=fullblock of="$dev"
+# printf '%s\n' "$random_key" | cryptsetup --iter-time 1 --hash sha512 --key-size 512 luksFormat "$dev"
+## https://github.com/mbroz/cryptsetup/blob/d7d76e72f7057e776ea1cb8679a8c682cbdf0113/FAQ#L773
+cryptsetup open --type plain --key-file /dev/random "$dev" "$cryptsetup_dev_name"
+badblocks -wsv -t random "$cryptsetup_dev_path" "$@"
+sync
+sleep 2
+cryptsetup close "$cryptsetup_dev_name"
+# dd if=/dev/urandom bs=1024 count=10 iflag=fullblock of="$dev"

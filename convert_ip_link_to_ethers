@@ -10,12 +10,12 @@ function extract_mac {
 
 while read line; do
     if echo $line | grep ': vlan0:' -q; then
-        echo "`extract_mac "$line"` ${prefix}_LAN"
+        echo "`extract_mac "$line"` E_${prefix}"
     fi
     if echo $line | grep ': vlan1:' -q; then
-        echo "`extract_mac "$line"` ${prefix}_WAN"
+        echo "`extract_mac "$line"` WA_${prefix}"
     fi
     if echo $line | grep ': eth1:' -q; then
-        echo "`extract_mac "$line"` ${prefix}_WLAN"
+        echo "`extract_mac "$line"` W_${prefix}"
     fi
 done < "$1"
