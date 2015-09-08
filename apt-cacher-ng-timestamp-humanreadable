@@ -1,0 +1,29 @@
+#!/usr/bin/env perl
+# Convert apt-cacher-ng timestamp format to human readable format.
+# Credits go to lavermil: http://www.linuxquestions.org/questions/linux-software-2/how-can-i-read-the-audit-time-stamp-msg%3Daudit-1213186256-105-20663-a-648547/
+#
+# Modified and maintained by Robin Schneider <ypid@riseup.net>
+# @license AGPLv3 <https://www.gnu.org/licenses/agpl-3.0.html>
+
+use strict;
+use warnings;
+use autodie;
+use utf8;
+use open qw(:std :utf8);
+binmode STDOUT, ':encoding(UTF-8)';
+
+use Number::Bytes::Human qw(format_bytes);
+
+while (<>) {
+    if (/^(?<time>\d+)\|(?<action>\w)\|(?<size_in_byte>\d+)\|(?<host>[^|]+?)\|(?<package>.*)$/xms) {
+        my $human_readable_timestamp = scalar localtime $+{'time'};
+        my $human_readable_size = format_bytes $+{'size_in_byte'};
+        printf("%s|%s|%6s|%16s|%s",
+            $human_readable_timestamp,
+            $+{action},
+            $human_readable_size,
+            $+{host},
+            $+{package},
+        );
+    }
+}
