@@ -1,0 +1,3 @@
+[submodule "submodules/conv2vmx-ovf"]
+	path = submodules/conv2vmx-ovf
+	url = https://gist.github.com/6650285.git
