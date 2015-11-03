@@ -10,22 +10,26 @@
 HOSTNAME="$1"
 TELNET_PORT="2323"
 
-if [ -z "$HOSTNAME" ]; then
+if [ -z "$HOSTNAME" ]
+then
     echo "Please enter the hostname of the device running ssh and remotekeyboard."
     exit 1
 fi
 
 # netstat -lnt | awk '$6 == "LISTEN" && $4 ~ ".2323"'
-if ! nc -z localhost "$TELNET_PORT"; then
+if ! nc -z localhost "$TELNET_PORT"
+then
     # ip6-localhost
-    if ! ssh -fNT -L$TELNET_PORT:localhost:$TELNET_PORT "$HOSTNAME"; then
+    if ! ssh -fNT -L$TELNET_PORT:localhost:$TELNET_PORT "$HOSTNAME"
+    then
         echo "Could not establish port forwarding via ssh."
         exit 1
     fi
 fi
 
 ## https://github.com/ypid/scripts/blob/master/telnet-login
-if ! telnet-login --port $TELNET_PORT --password "$remotekeyboard" localhost; then
+if ! telnet-login --port "$TELNET_PORT" --password "$remotekeyboard" localhost
+then
     echo "A problem occurred while connecting to the telnet server on your phone."
     echo "Make sure that remotekeyboard is the active keyboard on your phone and try again."
     exit 1

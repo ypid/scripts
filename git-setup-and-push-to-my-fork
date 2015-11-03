@@ -17,11 +17,11 @@
 ## You should have received a copy of the GNU Affero General Public License
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-git_remote_line="`git remote --verbose | grep '^origin' | head --lines=1`"
+git_remote_line="$(git remote --verbose | grep '^origin' | head --lines=1)"
 if [ -z "$git_remote_line" ]; then
-    git_remote_line="`git remote --verbose | head --lines=1`"
+    git_remote_line="$(git remote --verbose | head --lines=1)"
 fi
-repo_name="`echo $git_remote_line | perl -lne 'm#(?:(?<username>\w)/|://([^/]*/){2})(?<repo_name>[^ ]*?)(\.git| )# && print $+{repo_name}'`"
+repo_name="$(echo "$git_remote_line" | perl -lne 'm#(?:(?<username>\w)/|://([^/]*/){2})(?<repo_name>[^ ]*?)(\.git| )# && print $+{repo_name}')"
 
 echo "### Your repo is at: https://github.com/${GITHUB_USER}/${repo_name}"
 

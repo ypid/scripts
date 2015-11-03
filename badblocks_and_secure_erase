@@ -52,7 +52,7 @@ fi
 
 # printf '%s\n' "$random_key" | cryptsetup --iter-time 1 --hash sha512 --key-size 512 luksFormat "$dev"
 ## https://github.com/mbroz/cryptsetup/blob/d7d76e72f7057e776ea1cb8679a8c682cbdf0113/FAQ#L773
-cryptsetup open --type plain --key-file /dev/random "$dev" "$cryptsetup_dev_name"
+cryptsetup open --type plain --cipher aes-xts-plain64 --key-file /dev/random "$dev" "$cryptsetup_dev_name"
 badblocks -wsv -t random "$cryptsetup_dev_path" "$@"
 sync
 sleep 2
