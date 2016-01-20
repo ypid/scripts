@@ -28,6 +28,7 @@ then
 fi
 
 ## https://github.com/ypid/scripts/blob/master/telnet-login
+echo telnet-login --port "$TELNET_PORT" --password "$remotekeyboard" localhost
 if ! telnet-login --port "$TELNET_PORT" --password "$remotekeyboard" localhost
 then
     echo "A problem occurred while connecting to the telnet server on your phone."

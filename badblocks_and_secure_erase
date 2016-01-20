@@ -30,7 +30,7 @@ cryptsetup_dev_path="/dev/mapper/$cryptsetup_dev_name"
 
 if [ ! -b "$dev" ]
 then
-    echo "Usage: $0 device_path [badblocks_parameter]" >&2
+    echo "Usage: $0 <device_path> [ <badblocks_parameter> ]" >&2
     exit 1
 fi
 shift

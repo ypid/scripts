@@ -6,23 +6,21 @@ use feature qw(say);
 use Debian::AptContents;
 
 chdir; ## go to the home directory
-my $c = Debian::AptContents->new(
-	{
-		homedir => '.dh-make-perl',
-#		verbose => 0,
-	}
-);
+my $c = Debian::AptContents->new({
+    homedir => '.dh-make-perl',
+    # verbose => 0,
+});
 
 unless (@ARGV) {
-	@ARGV = qw(DateTime Perl::Critic::Bangs HTML::Parser);
+    @ARGV = qw(DateTime Perl::Critic::Bangs HTML::Parser);
 }
 
 my(@install_via_apt, @install_via_cpan);
 for my $module (@ARGV) {
-	if ( my $apt_package = $c->find_perl_module_package($module) ) {
+    if ( my $apt_package = $c->find_perl_module_package($module) ) {
             say "APT: $module: $apt_package";
             push @install_via_apt, $apt_package;
-	} else {
+    } else {
             say "CPAN: $module";
             push @install_via_cpan, $module;
         }

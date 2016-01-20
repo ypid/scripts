@@ -1,6 +1,6 @@
 # list-to-table – Compare products in a spreadsheet
 
-This script was written to parse a text, filter out interesting keywords and output it as csv. It is written for one custom format which http://geizhals.de and http://www.heise.de/preisvergleich use in the feature list of products.
+This script was written to parse a text, filter out interesting keywords and output it as CSV. It is written for one custom format which http://geizhals.de and http://www.heise.de/preisvergleich use in the feature list of products.
 
 So, this line of input:
 
