@@ -1,3 +1,6 @@
 [submodule "submodules/conv2vmx-ovf"]
 	path = submodules/conv2vmx-ovf
 	url = https://gist.github.com/6650285.git
+[submodule "submodules/hr"]
+	path = submodules/hr
+	url = https://github.com/LuRsT/hr.git
