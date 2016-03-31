@@ -1,0 +1,6 @@
+#!/bin/sh
+
+for filename in *.dump
+do
+    ./dconf_backup "$filename"
+done
