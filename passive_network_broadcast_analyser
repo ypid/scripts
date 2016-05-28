@@ -233,6 +233,8 @@ class NetworkTrafficParser:
                 )
 
     def __run_parts_include(self, dir_name, f):
+        # FIXME: Make other parts of the script Unicode safe.
+        dir_name = dir_name.decode('utf-8')
         if not os.path.isdir(dir_name):
             logging.warning(u"{} is not a directory".format(dir_name))
         else:
