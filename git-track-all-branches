@@ -1,0 +1,5 @@
+#!/bin/bash
+## https://stackoverflow.com/questions/67699/clone-all-remote-branches-with-git/4754797#4754797
+for branch in $(git branch --all | grep '^\s*remotes' | egrep --invert-match '(:?HEAD|master)$'); do
+    git branch --track "${branch##*/}" "$branch"
+done
