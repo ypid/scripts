@@ -239,7 +239,7 @@ class NetworkTrafficParser:
             logging.warning(u"{} is not a directory".format(dir_name))
         else:
             for dirname, dirnames, filenames in os.walk(dir_name):
-                for filename in filenames:
+                for filename in sorted(filenames):
                     include_file = os.path.join(dirname, filename)
                     f.write(u"# Begin of file \"{}\" {{{{{{\n".format(include_file))
                     with io.open(include_file, 'r', encoding='utf-8') as s:
