@@ -178,7 +178,7 @@ do	md5sum_force_false $file_n changesets
 	fi
 done
 if [ "$download" != "1" ]
-then	if [ "$count" -gt "0" ] 
+then	if [ "$count" -gt "0" ]
 	then	if [ "$count" == "1" ]
 		then	echo "Es ist eine neue Changesets Version verfügbar."
 		else	echo "Es sind $count neue Changesets Version verfügbar."
@@ -220,7 +220,7 @@ fi
 n=$1
 }
 if_var_t (){
-if [ -n "$t" ]		
+if [ -n "$t" ]
 then	echo "Es kann nur ein -t übergeben werde."
 	exit 1
 fi
@@ -254,7 +254,7 @@ done
 ### Ende Parameter Auswertung
 ### If Abfragen/Programmablauf
 if [ "$make_conf" == "1" ]
-then	make_config 
+then	make_config
 fi
 if [ -s "$config_datei" ]
 then	. $config_datei

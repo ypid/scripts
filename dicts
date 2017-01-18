@@ -1,5 +1,3 @@
 #!/bin/bash
-source ~/.shell_public
-shopt -s expand_aliases
 
-dict $@ |less
+dict "$@" | less
