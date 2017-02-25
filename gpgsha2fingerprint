@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Generate a strong checksum (SHA2-256) over a OpenPGP primary public key.
+# This can be provided in addition to the OpenPGP v4 SHA1 fingerprint.
+# Ref: https://github.com/QubesOS/qubes-issues/issues/2240#issuecomment-282470923
+
+set -o nounset -o pipefail -o errexit
+
+keyid="${1:-}"
+if [ -z "$keyid" ]
+then
+    echo "Expecting OpenPGP key id or UID as first parameter. Exiting." 1>&2
+    exit 1
+fi
+
+tmp_dir="$(mktemp -d)"; pushd "$tmp_dir" >/dev/null && gpg --export "$keyid" > pub.key && gpgsplit pub.key && sha256sum ./*.public_key; popd >/dev/null && rm -r "$tmp_dir"
+
+# Example:
+# $ tmp_dir="$(mktemp -d)"; pushd "$tmp_dir" >/dev/null && gpg --export "427F 11FD 0FAA 4B08 0123  F01C DDFA 1A3E 3687 9494" > pub.key && gpgsplit pub.key && sha256sum ./*.public_key; popd >/dev/null && rm -r "$tmp_dir"
+# 125d9b76ae515b819e882822fb97f531aa3a4d64791e1f244c89b2df23867c35  ./000001-006.public_key
