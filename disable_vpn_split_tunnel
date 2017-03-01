@@ -6,15 +6,17 @@
 ## Sometimes this is needed. Proper end point protection (isolation using VMs)
 ## is used anyway.
 
+set -o nounset -o pipefail -o errexit
+
 read _ _ vpn_gateway _ < <(ip r s default dev tun0 | head -n 1)
 read _ _ eth0_gateway _ < <(ip r s default dev eth0 | head -n 1)
 echo "VPN gateway: $vpn_gateway"
 echo "eth0 gateway: $eth0_gateway"
 
-ip r add default via "$eth0_gateway" metric 0
-ip r add 10.0.0.0/8 via "$vpn_gateway"
-ip r add 172.16.0.0/12 via "$vpn_gateway"
-ip r add 192.168.0.0/16 via "$vpn_gateway"
+ip r add default via "$eth0_gateway" metric 0 || true
+ip r add 10.0.0.0/8 via "$vpn_gateway" || true
+ip r add 172.16.0.0/12 via "$vpn_gateway" || true
+ip r add 192.168.0.0/16 via "$vpn_gateway" || true
 
 ## Prevent session timeout.
 while true; do ping -c 1 "$vpn_gateway"; sleep 300; done
