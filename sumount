@@ -19,7 +19,7 @@
 
 set -o nounset -o pipefail -o errexit
 
-name="$1"
+name="${1:-}"
 if [ -z "$name" ]; then
     echo 1>&2 "Please pass the device name as used in crypttab and fstab as first parameter."
     exit 1
