@@ -4,12 +4,12 @@
 
 ## Convert a full traffic VPN (inverse split tunneling) into a split tunneling VPN.
 ## Sometimes this is needed. Proper end point protection (isolation using VMs)
-## is used anyway.
+## is expected/used anyway.
 
 set -o nounset -o pipefail -o errexit
 
-read _ _ vpn_gateway _ < <(ip r s default dev tun0 | head -n 1)
-read _ _ eth0_gateway _ < <(ip r s default dev eth0 | head -n 1)
+read -r _ _ vpn_gateway _ < <(ip r s default dev tun0 | head -n 1)
+read -r _ _ eth0_gateway _ < <(ip r s default dev eth0 | head -n 1)
 echo "VPN gateway: $vpn_gateway"
 echo "eth0 gateway: $eth0_gateway"
 
