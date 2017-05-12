@@ -3,10 +3,10 @@
 ## Badblocks random will write a repetitive pattern of 2 * 64 * 1024
 ## (2 * blocks_at_once * block_size) by default and compare each "page" against
 ## this random pattern. This means that badblocks is not intended for secure
-## erasing by itself. Thats why I combined it with cryptsetup in this script.
+## erasing by itself. Thats why ypid combined it with cryptsetup in this script.
 ##
 ## @licence AGPLv3 <https://www.gnu.org/licenses/agpl-3.0.html>
-## @author Copyright (C) 2015 Robin Schneider <ypid@riseup.net>
+## @author Copyright (C) 2015-2017 Robin Schneider <ypid@riseup.net>
 ##
 ## This program is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Affero General Public License as
@@ -53,7 +53,7 @@ fi
 # printf '%s\n' "$random_key" | cryptsetup --iter-time 1 --hash sha512 --key-size 512 luksFormat "$dev"
 ## https://github.com/mbroz/cryptsetup/blob/d7d76e72f7057e776ea1cb8679a8c682cbdf0113/FAQ#L773
 cryptsetup open --type plain --cipher aes-xts-plain64 --key-file /dev/random "$dev" "$cryptsetup_dev_name"
-badblocks -wsv -t random "$cryptsetup_dev_path" "$@"
+badblocks -wsv -t random -b 4096 "$cryptsetup_dev_path" "$@"
 sync
 sleep 2
 cryptsetup close "$cryptsetup_dev_name"
