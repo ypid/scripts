@@ -25,7 +25,7 @@ set -e
 set -o pipefail
 
 dev="$1"
-cryptsetup_dev_name="tmp_delete"
+cryptsetup_dev_name="${2:-tmp_delete}"
 cryptsetup_dev_path="/dev/mapper/$cryptsetup_dev_name"
 
 if [ ! -b "$dev" ]
@@ -33,7 +33,6 @@ then
     echo "Usage: $0 <device_path> [ <badblocks_parameter> ]" >&2
     exit 1
 fi
-shift
 
 if [ -b "$cryptsetup_dev_path" ]
 then
@@ -53,7 +52,7 @@ fi
 # printf '%s\n' "$random_key" | cryptsetup --iter-time 1 --hash sha512 --key-size 512 luksFormat "$dev"
 ## https://github.com/mbroz/cryptsetup/blob/d7d76e72f7057e776ea1cb8679a8c682cbdf0113/FAQ#L773
 cryptsetup open --type plain --cipher aes-xts-plain64 --key-file /dev/random "$dev" "$cryptsetup_dev_name"
-badblocks -wsv -t random -b 4096 "$cryptsetup_dev_path" "$@"
+badblocks -wsv -t random -b 4096 "$cryptsetup_dev_path"
 sync
 sleep 2
 cryptsetup close "$cryptsetup_dev_name"
