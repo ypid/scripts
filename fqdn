@@ -9,14 +9,18 @@ if [ -r /etc/hostname ]
 then
     hostname="$(cat /etc/hostname)"
 else
-    hostname="$(hostname  --short)"
+    hostname="$(hostname --short)"
 fi
 
 if [ -r /etc/resolv.conf ] && grep -q '^domain ' /etc/resolv.conf
 then
     read -r _ domain < <(grep '^domain ' /etc/resolv.conf)
 
-    echo "${hostname}.${domain}"
+    if echo "${hostname}" | grep -q "${domain}$"; then
+        echo "${hostname}"
+    else
+        echo "${hostname}.${domain}"
+    fi
 else
     echo "${hostname}"
 fi
