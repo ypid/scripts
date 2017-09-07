@@ -1,0 +1,14 @@
+#!/bin/bash
+## Generic and configurable script to print company name used for copyright notice.
+
+set -o nounset -o pipefail -o errexit
+
+pre="${1:-}"
+post="${2:-}"
+
+get_command='git config --get user.company'
+
+if $get_command 2>&1 >/dev/null
+then
+    echo -e "${pre}$($get_command)${post}"
+fi
