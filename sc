@@ -13,7 +13,7 @@ my $service   = shift();
 my $operation = shift();
 
 if (defined $service) {
-    if ( $service !~ /\.service$/xms ) {
+    if ( $service !~ /(?:\.service$|@)/xms ) {
         $service .= '.service';
     }
     $operation //= 'status';
