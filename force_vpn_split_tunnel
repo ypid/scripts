@@ -1,6 +1,6 @@
 #!/bin/bash
 ## @author Copyright (C) 2017 Robin Schneider <ypid@riseup.net>
-## @license AGPL-3.0 <https://www.gnu.org/licenses/agpl-3.0.html>
+## @license AGPL-3.0-only <https://www.gnu.org/licenses/agpl-3.0.html>
 
 ## Convert a full traffic VPN (inverse split tunneling) into a split tunneling VPN.
 ## Sometimes this is needed. Proper end point protection (isolation using VMs)
