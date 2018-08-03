@@ -5,7 +5,7 @@
 set -o nounset -o pipefail -o errexit
 
 reset_terminal_title() {
-    if [ "$TERM" = "screen" ] && [ -n "$TMUX" ]; then
+    if [ "${TERM:-}" = "screen" ] && [ -n "${TMUX:-}" ]; then
         tmux set-window-option automatic-rename "on" 1>/dev/null
     else
         echo -ne "\033]0;Terminal\007"
@@ -35,7 +35,7 @@ if [ -z "$(get_ssh_cli_host "$@")" ]; then
     command "$ssh_command" "$@"
     exit 1
 fi
-if [ "$TERM" = "screen" ] && [ -n "$TMUX" ]; then
+if [ "${TERM:-}" = "screen" ] && [ -n "${TMUX:-}" ]; then
     tmux rename-window "$(get_ssh_cli_host "$@")"
     command "$ssh_command" "$@"
 else
