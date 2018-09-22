@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+## @author Copyright (C) 2018 Robin Schneider <ypid@riseup.net>
+## @license AGPL-3.0-only <https://www.gnu.org/licenses/agpl-3.0.html>
+
+set -o nounset -o pipefail -o errexit
+
+if [ "$#" -ne 3 ]; then
+    echo "Call as: ./$0 <camera_url> <camera_id> <base_path>"
+fi
+
+camera_url="${1}"
+camera_id="${2}"
+base_path="${3}"
+
+## We assume perfection so the upload of a new picture would happen XX:XX:00 assuming a precise clock on the remote.
+## This can not be further away from the truth but it is the best assumption I can make here.
+## Also, it has been observed that when making a request at XX:XX:01, we get the picture for XX:(XX-1):00.
+
+sleep 6
+
+
+## Useful for finding the sweet spot (time when the image is uploaded, to avoid misses).
+# for _ in $(seq 6); do
+
+camera_path="${base_path}/${camera_id}"
+file_extension="${camera_url##*.}"
+file_path="${camera_path}/$(date +%Y/%m/%d/%T).${file_extension}"
+file_dir_path="$(dirname "$file_path")"
+
+mkdir -p "$file_dir_path"
+
+if ! curl_output="$(curl --max-time 30 --user-agent "" --fail --silent --show-error "$camera_url" -o "$file_path" 2>&1)"; then
+    echo "$(date --rfc-3339=seconds): $curl_output" >> "${camera_path}/load_errors.log"
+fi
+
+# sleep 6
+# done
