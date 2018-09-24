@@ -9,15 +9,15 @@ use 5.010;
 
 use version; our $VERSION = qv('0.2.0');
 
-my $service   = shift();
+my $name      = shift();
 my $operation = shift();
 
-if (defined $service) {
-    if ( $service !~ /\.service$/xms ) {
-        $service .= '.service';
+if (defined $name) {
+    if ( $name !~ /\./xms ) {
+        $name .= '.service';
     }
     $operation //= 'status';
-    exec('systemctl', $operation, $service);
+    exec('systemctl', $operation, $name);
 } else {
     $operation //= 'list-units';
     exec('systemctl', $operation);
