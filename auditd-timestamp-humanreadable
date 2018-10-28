@@ -3,7 +3,7 @@
 # Credits go to lavermil: http://www.linuxquestions.org/questions/linux-software-2/how-can-i-read-the-audit-time-stamp-msg%3Daudit-1213186256-105-20663-a-648547/
 #
 # Modified and maintained by Robin Schneider <ypid@riseup.net>
-# @license AGPLv3 <https://www.gnu.org/licenses/agpl-3.0.html>
+# @license AGPL-3.0-only <https://www.gnu.org/licenses/agpl-3.0.html>
 
 use strict;
 use warnings;

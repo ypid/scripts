@@ -5,7 +5,7 @@
 ## this random pattern. This means that badblocks is not intended for secure
 ## erasing by itself. Thats why ypid combined it with cryptsetup in this script.
 ##
-## @licence AGPLv3 <https://www.gnu.org/licenses/agpl-3.0.html>
+## @licence AGPL-3.0-only <https://www.gnu.org/licenses/agpl-3.0.html>
 ## @author Copyright (C) 2015-2017 Robin Schneider <ypid@riseup.net>
 ##
 ## This program is free software: you can redistribute it and/or modify
