@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+# http://code.activestate.com/recipes/576587-sort-sections-and-keys-in-ini-file/
+# Modified by ypid for linting and Python3 support.
+
+__license__ = 'MIT'
+__author__ = 'Michal Niklas'
+
+import sys
+
+
+def sort_ini(fname):
+    """sort .ini file: sorts sections and in each section sorts keys"""
+    f = open(fname)
+    lines = f.readlines()
+    f.close()
+    section = ''
+    sections = {}
+    for line in lines:
+        line = line.strip()
+        if line:
+            if line.startswith('['):
+                section = line
+                continue
+            if section:
+                try:
+                    sections[section].append(line)
+                except KeyError:
+                    sections[section] = [line, ]
+    if sections:
+        sk = sorted(sections.keys())
+        for k in sk:
+            vals = sections[k]
+            vals.sort()
+            print(k)
+            print('\n'.join(vals))
+            print()
+
+
+if len(sys.argv) < 2:
+    print('USAGE:\n\tsort_ini.py file.ini')
+else:
+    sort_ini(sys.argv[1])
