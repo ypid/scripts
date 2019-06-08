@@ -1,0 +1,12 @@
+#!/bin/bash
+# Tested on Debian 9
+
+set -o nounset -o pipefail -o errexit
+
+rm /etc/ssh/ssh_host_* && dpkg-reconfigure openssh-server
+
+rm /etc/machine-id /var/lib/dbus/machine-id && systemd-machine-id-setup
+
+rm "$0"
+
+reboot
