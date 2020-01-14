@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     if args['command'] not in ['status']:
         # Note, os.execvp does not flush open file objects and descriptors!
-        os.execvp(call[0], call[1:])
+        os.execvp(call[0], call)
         #  os.system(call)
     else:
         environ = os.environ.copy()
