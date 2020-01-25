@@ -21,10 +21,11 @@ set -o nounset -o pipefail -o errexit
 ## journalctl wrapper with nice output format and colors based on log event severity.
 ## The order is for human consumption only so they are just based on RFC 5424 (without being compliant) and the default journalctl short-iso format.
 ## The syslog severity is added which is missing in common log formats or not human readable (RFC 5424).
-## The time format is based on systemd.time(7) and RFC 3339.
+## Proper RFC 3339 date format. The format for the additional weekday was taken from systemd.time(7).
 ## The colors are made up by ypid because I could not find a proper standard.
 ## Ref: https://serverfault.com/questions/59262/bash-print-stderr-in-red-color/502019#502019
 ## Ref: https://serverfault.com/questions/801514/systemd-default-log-output-format
+## Ref: https://github.com/systemd/systemd/issues/14515
 
 export LC_ALL=C.UTF-8
 

@@ -7,7 +7,7 @@ systemctl wrapper.
 Features:
 
 * Switch command and name. Example: sc nginx restart
-* Proper ISO 8601 date format.
+* Proper RFC 3339 date format. The format for the additional weekday was taken from systemd.time(7).
 
 Ref: https://github.com/systemd/systemd/issues/14515
 """
@@ -25,7 +25,7 @@ import re
 import pydoc
 
 # No hard depend on third party modules which might not be installed.
-try
+try:
     import pexpect
 except:
     pass
@@ -95,7 +95,9 @@ if __name__ == '__main__':
         for line in stdout.split('\n'):
 
             if not re_done:
-                _re = re.search(r'^(?P<pre>\s*Active:.*:\d{2})(?P<tz> \w+)(?P<post>.*)$', line)
+                # Active: active (running) since Sat 2020-01-25 19:06:55 CET; 1h 21min ago
+                # Condition: start condition failed at Sat 2020-01-25 19:06:55 CET; 1h 20min ago
+                _re = re.search(r'^(?P<pre>.* (?:since|at) .*:\d{2})(?P<tz> \w+)(?P<post>.*)(?:$|;)', line)
                 if _re:
                     line = ''.join([
                         _re.group('pre'),
