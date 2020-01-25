@@ -12,7 +12,7 @@ Features:
 Ref: https://github.com/systemd/systemd/issues/14515
 """
 
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 __license__ = 'AGPL-3.0-only'
 __author__ = 'Robin Schneider <ypid@riseup.net>'
 __copyright__ = [
@@ -24,7 +24,11 @@ import os
 import re
 import pydoc
 
-import pexpect
+# No hard depend on third party modules which might not be installed.
+try
+    import pexpect
+except:
+    pass
 
 
 if __name__ == '__main__':
@@ -42,7 +46,7 @@ if __name__ == '__main__':
     if 'name' in args:
         call.append(args['name'])
 
-    if args['command'] not in ['status']:
+    if 'pexpect' not in sys.modules or args['command'] not in ['status']:
         # Note, os.execvp does not flush open file objects and descriptors!
         os.execvp(call[0], call)
         #  os.system(call)
@@ -53,7 +57,7 @@ if __name__ == '__main__':
         })
 
         # journalctl somehow detects pexpect.runu and truncates lines.
-        # Midigation (only needed for pexpect and pty):
+        # Mitigation (only needed for pexpect and pty):
         call.insert(1, '--full')
 
         try:
