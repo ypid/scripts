@@ -83,6 +83,8 @@ if __name__ == '__main__':
         # stdout = process.communicate()[0].decode()
         # exitstatus = process.returncode
 
+        # Refer to ./timezone-names-to-utc-offsets for an attempt to generate
+        # this map.
         tz_to_offset_map = {
             'UTC': 'z',
             'CET': '+01:00',
