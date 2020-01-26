@@ -7,4 +7,4 @@
 	url = https://github.com/LuRsT/hr.git
 [submodule "submodules/sshrc"]
 	path = submodules/sshrc
-	url = https://github.com/Russell91/sshrc
+	url = https://github.com/buehmann/sshrc.git
