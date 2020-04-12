@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 ## Run badblocks on a cryptsetup layer.
 ## Badblocks random will write a repetitive pattern of 2 * 64 * 1024
 ## (2 * blocks_at_once * block_size) by default and compare each "page" against
@@ -6,7 +6,7 @@
 ## erasing by itself. Thats why ypid combined it with cryptsetup in this script.
 ##
 ## @licence AGPL-3.0-only <https://www.gnu.org/licenses/agpl-3.0.html>
-## @author Copyright (C) 2015-2017 Robin Schneider <ypid@riseup.net>
+## @author Copyright (C) 2015-2020 Robin Schneider <ypid@riseup.net>
 ##
 ## This program is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Affero General Public License as
@@ -22,7 +22,6 @@
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 set -e
-set -o pipefail
 
 dev="$1"
 cryptsetup_dev_name="${2:-tmp_delete}"
@@ -30,7 +29,7 @@ cryptsetup_dev_path="/dev/mapper/$cryptsetup_dev_name"
 
 if [ ! -b "$dev" ]
 then
-    echo "Usage: $0 <device_path> [ <badblocks_parameter> ]" >&2
+    echo "Usage: $0 <device_path> [ <dev_mapper_target> ]" >&2
     exit 1
 fi
 
