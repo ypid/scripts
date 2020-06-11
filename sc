@@ -37,15 +37,11 @@ __maintainer__ = 'Robin Schneider <ypid@riseup.net>'
 
 
 def single_execute(name, command):
-    if name is None:
-        if command is None:
-            command = 'list-units'
-    else:
+    call = ['systemctl', command]
+
+    if name is not None:
         if '.' not in name:
             name += '.service'
-
-    call = ['systemctl', command]
-    if name is not None:
         call.append(name)
 
     if 'pexpect' not in sys.modules or command not in ['status']:
