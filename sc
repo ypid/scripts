@@ -22,6 +22,7 @@ from __future__ import (print_function, unicode_literals,
 import sys
 import os
 import re
+import logging
 import pydoc
 
 from argparse import ArgumentParser, RawTextHelpFormatter
@@ -32,17 +33,20 @@ try:
 except ImportError:
     pass
 
-__version__ = '0.4.0'
+__version__ = '0.4.1'
 __maintainer__ = 'Robin Schneider <ypid@riseup.net>'
+LOG = logging.getLogger(__name__)
 
 
 def single_execute(name, command):
-    call = ['systemctl', command]
+    call = ['systemctl']
 
     if name is not None:
         if '.' not in name:
             name += '.service'
-        call.append(name)
+        call.extend([command if (command is not None) else 'status', name])
+
+    LOG.info("Executing: {}".format(call))
 
     if 'pexpect' not in sys.modules or command not in ['status']:
         # Note, os.execvp does not flush open file objects and descriptors!
@@ -122,14 +126,26 @@ def main():
         formatter_class=RawTextHelpFormatter,
     )
     args_parser.add_argument('name', nargs='?', type=str)
-    args_parser.add_argument('command', nargs='*', type=str, default=['status'])
+    args_parser.add_argument('command', nargs='*', type=str, default=[None])
     args_parser.add_argument(
         '-V',
         '--version',
         action='version',
         version='%(prog)s {version}'.format(version=__version__),
     )
+    args_parser.add_argument(
+        '-v', '--verbose', action='append_const',
+        help="Verbose output.",
+        dest="loglevel",
+        const=1,
+    )
     cli_args = args_parser.parse_args()
+    if cli_args.loglevel:
+        logging.basicConfig(
+            format='{levelname} {message}',
+            style='{',
+            level=logging.INFO,
+        )
 
     worst_exitcode = 0
     for command in cli_args.command:
