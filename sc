@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # SPDX-FileCopyrightText: 2017-2020 Robin Schneider <ypid@riseup.net>
+#
 # SPDX-License-Identifier: AGPL-3.0-only
 
 """
@@ -24,6 +25,7 @@ import os
 import re
 import logging
 import pydoc
+import functools
 
 from argparse import ArgumentParser, RawTextHelpFormatter
 
@@ -32,23 +34,47 @@ try:
     import pexpect
 except ImportError:
     pass
+try:
+    import psutil
+except ImportError:
+    pass
 
-__version__ = '0.4.1'
+__version__ = '0.5.0'
 __maintainer__ = 'Robin Schneider <ypid@riseup.net>'
 LOG = logging.getLogger(__name__)
+
+
+@functools.lru_cache()
+def systemd_is_init_system():
+    if 'psutil' in sys.modules:
+        return any(True for p in psutil.process_iter() if "systemd" == p.name())
+    else:
+        LOG.warning("pexpect is not installed so we just assume systemd is your init system.")
+        return True
 
 
 def single_execute(name, command):
     call = ['systemctl']
 
-    if name is not None:
-        if '.' not in name:
-            name += '.service'
-        call.extend([command if (command is not None) else 'status', name])
+    if command is None:
+        command = 'status'
+
+    if systemd_is_init_system():
+        if name is not None:
+            if '.' not in name:
+                name += '.service'
+            call.extend([name])
+    else:
+        call = ['service', name, command]
+        if name is None:
+            call = ['service', '--status-all']
 
     LOG.info("Executing: {}".format(call))
 
-    if 'pexpect' not in sys.modules or command not in ['status']:
+    if call[0] == 'service':
+        return os.system(' '.join(call))
+    elif 'pexpect' not in sys.modules or command not in ['status']:
+        LOG.warning("pexpect is not installed so we cannot rewrite the command output.")
         # Note, os.execvp does not flush open file objects and descriptors!
         #  os.execvp(call[0], call)
         return os.system(' '.join(call))
@@ -140,12 +166,11 @@ def main():
         const=1,
     )
     cli_args = args_parser.parse_args()
-    if cli_args.loglevel:
-        logging.basicConfig(
-            format='{levelname} {message}',
-            style='{',
-            level=logging.INFO,
-        )
+    logging.basicConfig(
+        format='{levelname}: {message}',
+        style='{',
+        level=logging.INFO if cli_args.loglevel else logging.WARNING,
+    )
 
     worst_exitcode = 0
     for command in cli_args.command:
