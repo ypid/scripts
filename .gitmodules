@@ -8,3 +8,6 @@
 [submodule "submodules/sshrc"]
 	path = submodules/sshrc
 	url = https://github.com/buehmann/sshrc.git
+[submodule "submodules/git-authors"]
+	path = submodules/git-authors
+	url = https://github.com/jgehrcke/git-authors.git
