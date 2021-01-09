@@ -1,2 +1,10 @@
 #!/bin/sh
-sleep 0.1 && xset dpms force off
+
+# SPDX-FileCopyrightText: 2013 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
+set -o nounset -o pipefail -o errexit
+
+sleep 0.1
+xset dpms force off

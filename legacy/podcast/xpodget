@@ -1,6 +1,8 @@
 #!/bin/bash
-## @author Robin Schneider <ypid23@aol.de>
-## @licence GPLv3+: GNU GPL version 3 or any later version, see http://www.fsf.org/licensing/licenses/gpl.html
+
+# SPDX-FileCopyrightText: 2013 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
 
 ## default config
 config_dir="$HOME/.xpodget"

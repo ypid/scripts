@@ -1,7 +1,10 @@
-#!/usr/bin/env python
-# encoding: utf-8
-# @author Robin Schneider <ypid23@aol.de>
-# @licence GPLv3 <http://www.gnu.org/licenses/gpl.html>
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# SPDX-FileCopyrightText: 2014 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 """
 This script was written to parse a text, filter out interesting keywords and
 output it as csv. It is written for one custom format which http://geizhals.de
@@ -19,6 +22,7 @@ import re
 # module wide variables {{{
 SCRIPT_URL = 'https://github.com/ypid/scripts/blob/master/list-to-table/list-to-table.py'
 # }}}
+
 
 class ListToTable:
     def __init__(
@@ -141,6 +145,7 @@ def main():  # {{{
         u"All properties: %s",
         u','.join(l2t_parser.get_all_properties())
     )
+
 
 if __name__ == '__main__':
     from argparse import ArgumentError, ArgumentParser

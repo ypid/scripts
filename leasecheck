@@ -1,7 +1,11 @@
 #!/usr/bin/perl
-# https://gist.github.com/mattpascoe/4348991
+
+# SPDX-FileCopyrightText: 2012,2014 Matt Pascoe
+
+# Source: https://gist.github.com/mattpascoe/4348991
 #
 # Update the path to your lease file below
+
 use strict;
 use File::Copy;
 #use DateTime;

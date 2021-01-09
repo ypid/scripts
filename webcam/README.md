@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2018 Robin Schneider <ypid@riseup.net>
+
+SPDX-License-Identifier: AGPL-3.0-only
+-->
+
 # Public webcam download script
 
 Intended for downloading/archiving pictures taken by (public) webcams where you can download a (JPEG) image which is usually updated every minute.

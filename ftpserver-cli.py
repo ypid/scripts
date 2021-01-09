@@ -1,6 +1,11 @@
-#!/usr/bin/env python
-# ftpserver-cli.py
+#!/usr/bin/env python3
+
+# SPDX-FileCopyrightText: 2010 Stefano Palazzo <stefano.palazzo@gmail.com>
+#
+# SPDX-License-Identifier: MIT
+
 # Source: https://askubuntu.com/questions/17084/how-do-i-temporarily-run-an-ftp-server/17095#17095
+
 import sys
 import argparse
 
@@ -34,9 +39,9 @@ print(
 authorizer = DummyAuthorizer()
 authorizer.add_user(
     optargs.username,
-     optargs.password,
-     optargs.directory,
-     perm="elradfmw")
+    optargs.password,
+    optargs.directory,
+    perm="elradfmw")
 # authorizer.add_anonymous("/home/nobody")
 
 handler = FTPHandler

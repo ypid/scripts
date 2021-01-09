@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# SPDX-FileCopyrightText: 2017 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 # Get the FQDN of the host without making DNS queries.
 
 domain=''

@@ -1,5 +1,9 @@
 #!/bin/bash
-# @author Robin Schneider
+
+# SPDX-FileCopyrightText: 2012 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 # 0/4 *   * * 5   Skripten/Freitagsblätter.sh -d -c
 server_dir="http://www.waldorfschule-balingen.de/newsletter/"
 wget_baseopts="--random-wait -c"

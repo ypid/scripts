@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-## @author Copyright (C) 2018 Robin Schneider <ypid@riseup.net>
-## @license AGPL-3.0-only <https://www.gnu.org/licenses/agpl-3.0.html>
+
+# SPDX-FileCopyrightText: 2018 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
 
 set -o nounset -o pipefail -o errexit
 
@@ -12,9 +14,9 @@ camera_url="${1}"
 camera_id="${2}"
 base_path="${3}"
 
-## We assume perfection so the upload of a new picture would happen XX:XX:00 assuming a precise clock on the remote.
-## This can not be further away from the truth but it is the best assumption I can make here.
-## Also, it has been observed that when making a request at XX:XX:01, we get the picture for XX:(XX-1):00.
+# We assume perfection so the upload of a new picture would happen XX:XX:00 assuming a precise clock on the remote.
+# This can not be further away from the truth but it is the best assumption I can make here.
+# Also, it has been observed that when making a request at XX:XX:01, we get the picture for XX:(XX-1):00.
 
 sleep 6
 

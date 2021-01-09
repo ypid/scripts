@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2017 Robin Schneider <ypid@riseup.net>
+
+SPDX-License-Identifier: AGPL-3.0-only
+-->
+
 # dconf-backup
 
 Very simple shell scripts to backup and restore parts of your dconf database.

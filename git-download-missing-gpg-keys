@@ -1,18 +1,9 @@
 #!/bin/bash
-## @author Robin Schneider <ypid@riseup.net>
-## @licence GPLv3 <http://www.gnu.org/licenses/gpl.html>
-## This program is free software: you can redistribute it and/or modify
-## it under the terms of the GNU General Public License as published by
-## the Free Software Foundation version 3 of the License.
-##
-## This program is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-##
-## You should have received a copy of the GNU General Public License
-## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-git log --show-signature --max-count=100 | grep 'RSA key' | sed 's/^.*using rsa key //i' | sort -u | while read keyID; do
+# SPDX-FileCopyrightText: 2014 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
+git log --show-signature --max-count=100 | grep 'RSA key' | sed 's/^.*using rsa key //i' | sort -u | while read -r keyID; do
     gpg --recv-keys "$keyID"
 done

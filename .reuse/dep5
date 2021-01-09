@@ -1,0 +1,8 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: ypid-scripts
+Upstream-Contact: Robin Schneider <ypid@riseup.net>
+Source: https://github.com/ypid/scripts/
+
+Files: cdcat/tests/* cdcat/cdcat/test
+Copyright: 2014 Robin Schneider <ypid@riseup.net>
+License: AGPL-3.0-only

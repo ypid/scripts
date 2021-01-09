@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
-# SPDX-FileCopyrightText: 2017-2020 Robin Schneider <ypid@riseup.net>
+
+# SPDX-FileCopyrightText: 2017-2021 Robin Schneider <ypid@riseup.net>
 #
 # SPDX-License-Identifier: AGPL-3.0-only
 

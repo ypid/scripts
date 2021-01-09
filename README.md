@@ -1,4 +1,11 @@
-# Scripts
+<!--
+SPDX-FileCopyrightText: 2021 Robin Schneider <ypid@riseup.net>
+
+SPDX-License-Identifier: CC-BY-SA-4.0
+-->
+
+# ypid-scripts
+
 This git repository tracks some scrips that I use frequently and which could
 also be useful for others.
 

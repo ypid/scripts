@@ -1,14 +1,18 @@
 #!/usr/bin/env perl
+
+# SPDX-FileCopyrightText: 2013 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 use strict;
 use warnings;
 use autodie;
-# use feature qw(say);
 use utf8;
 binmode STDOUT, ':encoding(UTF-8)';
 
 use MP3::Podcast;
 
-## #Generates a podcast from directories handled in the command line
+# Generates a podcast from directories handled in the command line
 my $dirbase = shift || die "Base dir missing\n";
 my $urlbase = shift || die "Base URL missing\n";
 my $dir = shift || die "Dir to scan missing\n";

@@ -1,20 +1,10 @@
 #!/usr/bin/env python
-# encoding: utf-8
-# @licence AGPL-3.0-only <https://www.gnu.org/licenses/agpl-3.0.html>
-# @author Copyright (C) 2015 Robin Schneider <ypid@riseup.net>
+# -*- coding: utf-8 -*-
+
+# SPDX-FileCopyrightText: 2015 Robin Schneider <ypid@riseup.net>
 #
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as
-# published by the Free Software Foundation, version 3 of the
-# License.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
-#
-# You should have received a copy of the GNU Affero General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# SPDX-License-Identifier: AGPL-3.0-only
+
 """
 Quick and dirty SSH login script intended for cisco routers and switches.
 Tried rancid and other scripts but, well, they are old and did not really work.
@@ -144,6 +134,7 @@ def main(args):
         )
         ssh_expect.login()
         ssh_expect.end()
+
 
 if __name__ == '__main__':
     from argparse import ArgumentParser

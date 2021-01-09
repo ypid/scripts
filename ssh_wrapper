@@ -1,6 +1,11 @@
 #!/bin/bash
-## Fine-tuned ssh or sshrc wrapper which sets the terminal title to the ssh
-## target and also resets the title when ssh terminates.
+
+# SPDX-FileCopyrightText: 2018 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
+# Fine-tuned ssh or sshrc wrapper which sets the terminal title to the ssh
+# target and also resets the title when ssh terminates.
 
 set -o nounset -o pipefail -o errexit
 
@@ -8,7 +13,7 @@ reset_terminal_title() {
     if [ "${TERM:-}" = "screen" ] && [ -n "${TMUX:-}" ]; then
         tmux set-window-option automatic-rename "on" 1>/dev/null
     else
-        echo -ne "\033]0;Terminal\007"
+        echo -ne '\033]0;Terminal\007'
     fi
 }
 
@@ -39,6 +44,6 @@ if [ "${TERM:-}" = "screen" ] && [ -n "${TMUX:-}" ]; then
     tmux rename-window "$(get_ssh_cli_host "$@")"
     command "$ssh_command" "$@"
 else
-    echo -ne "\033]0;$(get_ssh_cli_host "$@")\007"
+    echo -ne '\033]0;'"$(get_ssh_cli_host "$@")"'\007'
     command "$ssh_command" "$@"
 fi

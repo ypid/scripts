@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-# encoding: utf-8
-# @author Robin Schneider <ypid23@aol.de>
-# @licence GPLv3 <http://www.gnu.org/licenses/gpl.html>
+
+# SPDX-FileCopyrightText: 2014 Robin Schneider <ypid@riseup.net>
 #
+# SPDX-License-Identifier: AGPL-3.0-only
+
 """
 Implementation of the work flow explained here: http://superuser.com/a/717689
 In short: Uses the database from cdcat to copy wanted files.
@@ -112,7 +113,7 @@ class CopyHelper:  # {{{
 
         try:
             self.parse_compressed_catalog_file(catalog_file, generate_format)
-        except IOError as error:
+        except IOError:
             try:
                 self.parse_uncompressed_catalog_file(catalog_file, generate_format)
             except ET.ParseError as error:
@@ -276,8 +277,8 @@ class CopyHelper:  # {{{
             self, base_path, cur_path, file_path, unwanted, node_type):
         unwanted = [item for item in unwanted if item is not None]
         node_path = cur_path if node_type == 'dir' else file_path
-        source_node_path = self._directory_separator.join(
-            [base_path, node_path])
+        #  source_node_path = self._directory_separator.join(
+        #      [base_path, node_path])
         logging.debug(u'Include %s %s', node_type, node_type)
         if 'git-annex' == self._generate_format:
             unwanted = ['--exclude=\'%s\'' % item for item in unwanted]
@@ -442,6 +443,7 @@ def main():  # {{{
         user_parms.file,
         generate_format=user_parms.method,
     )
+
 
 if __name__ == '__main__':
     import argparse

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2015-2021 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: CC0-1.0
+
 [submodule "submodules/conv2vmx-ovf"]
 	path = submodules/conv2vmx-ovf
 	; url = https://gist.github.com/6650285.git

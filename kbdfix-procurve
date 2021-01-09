@@ -1,20 +1,23 @@
 #!/usr/bin/expect
-## Based on http://www.ibb.net/~anne/keyboard/keyboard.html#other
-## Extended by Robin Schneider <ypid23@aol.de>
-## Tested with HP Procurve Switch to somehow restore the "default" behavior of a shell.
+
+# SPDX-FileCopyrightText: http://www.ibb.net/~anne/keyboard/keyboard.html#other
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
+# Tested with HP Procurve Switch to somehow restore the "default" behavior of a shell.
 # * Comware Software, Version 5.20.105, Release 1808P25
 
 eval spawn -noecho $argv
 
 interact {
  \177        {send "\010"}
- ## Map backslash to Ctrl-H.
+ ## Map backslash to Ctrl+H.
 
  \025        {send "\030"}
- ## Map Ctrl-U to Ctrl-X (hack to make this work with HP Procurve. Manual allows both, but only Ctrl-X seems to work to delete the line).
+ ## Map Ctrl+U to Ctrl+X (hack to make this work with HP Procurve. Manual allows both, but only Ctrl+X seems to work to delete the line).
 
  \004        {send "quit\015"}
- ## Enter quit^M on Ctrl-D (again for HP Procurve).
+ ## Enter quit^M on Ctrl+D (again for HP Procurve).
 
 
  "\033\[3~"  {send "\177"}

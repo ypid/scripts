@@ -1,5 +1,9 @@
 #!/bin/bash
-## Generic and configurable script to print company name used for copyright notice.
+# Generic and configurable script to print company name used for copyright notice.
+
+# SPDX-FileCopyrightText: 2017 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
 
 set -o nounset -o pipefail -o errexit
 
@@ -8,7 +12,7 @@ post="${2:-}"
 
 get_command='git config --get user.company'
 
-if $get_command 2>&1 >/dev/null
+if $get_command >/dev/null 2>&1
 then
     echo -e "${pre}$($get_command)${post}"
 fi

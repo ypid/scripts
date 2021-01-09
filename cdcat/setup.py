@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+
+# SPDX-FileCopyrightText: 2014 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 # encoding: utf-8
 
 from setuptools import setup

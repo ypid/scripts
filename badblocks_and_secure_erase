@@ -1,25 +1,14 @@
 #!/bin/sh
-## Run badblocks on a cryptsetup layer.
-## Badblocks random will write a repetitive pattern of 2 * 64 * 1024
-## (2 * blocks_at_once * block_size) by default and compare each "page" against
-## this random pattern. This means that badblocks is not intended for secure
-## erasing by itself. Thats why ypid combined it with cryptsetup in this script.
-##
-## @licence AGPL-3.0-only <https://www.gnu.org/licenses/agpl-3.0.html>
-## @author Copyright (C) 2015-2020 Robin Schneider <ypid@riseup.net>
-##
-## This program is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Affero General Public License as
-## published by the Free Software Foundation, version 3 of the
-## License.
-##
-## This program is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU Affero General Public License for more details.
-##
-## You should have received a copy of the GNU Affero General Public License
-## along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# Run badblocks on a cryptsetup layer.
+# Badblocks random will write a repetitive pattern of 2 * 64 * 1024
+# (2 * blocks_at_once * block_size) by default and compare each "page" against
+# this random pattern. This means that badblocks is not intended for secure
+# erasing by itself. Thats why ypid combined it with cryptsetup in this script.
+
+# Copyright (C) 2015-2020 Robin Schneider <ypid@riseup.net>
+# SPDX-FileCopyrightText: 2015-2017,2020-2021 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
 
 set -e
 
@@ -41,8 +30,8 @@ then
     exit 1
 fi
 
-echo -n "Are you sure to securely erase *all* data on $dev and test the device with badblocks? (Type uppercase yes): "
-read erase
+printf '%s' "Are you sure to securely erase *all* data on $dev and test the device with badblocks? (Type uppercase yes): "
+read -r erase
 if [ "$erase" != 'YES' ]
 then
     exit 1

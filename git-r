@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# SPDX-FileCopyrightText: 2012 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 if [ -z "$1" ]
 then	echo "Please Enter a command for git like gc or fsck. This command will be executed on each git project found, starting from the current working directory"
 	exit 1

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# http://code.activestate.com/recipes/576587-sort-sections-and-keys-in-ini-file/
-# Modified by ypid for linting and Python3 support.
 
-__license__ = 'MIT'
-__author__ = 'Michal Niklas'
+# SPDX-FileCopyrightText: 2008 Michal Niklas
+#
+# SPDX-License-Identifier: MIT
+
+# https://code.activestate.com/recipes/576587-sort-sections-and-keys-in-ini-file/
 
 import sys
 

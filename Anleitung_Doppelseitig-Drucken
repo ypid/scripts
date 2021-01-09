@@ -1,18 +1,21 @@
 #!/bin/bash
-# @author Robin Schneider
-#Ablauf:
-#-Ungerade Seiten Rückwerts Drucken
-#-Blätter Umdrehen und wieder einlegen
-#-Gerade Seiten Drucken.
+
+# SPDX-FileCopyrightText: 2012 Robin Schneider <ypid@riseup.net>
 #
+# SPDX-License-Identifier: AGPL-3.0-only
+
+# Ablauf:
+# -Ungerade Seiten Rückwerts Drucken
+# -Blätter Umdrehen und wieder einlegen
+# -Gerade Seiten Drucken.
 
 Seitenzahl_einlesen (){
 	counter=0
 	while true
-	do	read seiten
+	do read -r seiten
 		if [ 0 -lt "$seiten" ]
 		then	break
-		else	counter=$(($counter+1))
+		else	counter=$($counter+1)
 			if [ "$counter" -gt 22 ]
 			then
 				if [ "$counter" -gt 23 ]
@@ -25,7 +28,7 @@ Seitenzahl_einlesen (){
 	done
 }
 
-if [ ! -z $1 ]
+if [ ! -z "$1" ]
 then	if [ 0 -lt "$1" ]
 	then	seiten=$1
 	else	echo -n 'Bitte übergeben Sie eine korrekte Seitenzahl.: '
@@ -51,9 +54,9 @@ then	seiten_2add1=$((seiten_2+1))
 	seiten_ungerade=$((seiten-2))
 else	if [ "$seiten_2" == "1" ];then echo "Insgesamt wird eine Seite benötigt.";else echo "Insgesamt werden $seiten_2 Seiten benötigt.";fi
 	echo -n 'Drucken sie die ungeraden Seiten : '
-	seiten_ungerade=$(($seiten-1))
+	seiten_ungerade=$(seiten-1)
 fi
-for i in `seq 1 $seiten_2`
+for i in $(seq 1 $seiten_2)
 do	echo -n "$seiten_ungerade"
 	if [ ! "$i" = "$seiten_2" ]
 	then	echo -n ","
@@ -61,10 +64,10 @@ do	echo -n "$seiten_ungerade"
 	seiten_ungerade=$((seiten_ungerade-2))
 done
 
-read fnort
+read -r _
 echo 'Nehmen sie die Blätter heraus und legen Sie diese wieder ins Papierfach'
 echo -n 'Drucken sie abschließend die geraden Seiten : '
-for i in `seq 1 $seiten_2`
+for i in $(seq 1 $seiten_2)
 do	seiten_gerade=$((seiten_gerade+2))
 	echo -n "$seiten_gerade"
 	if [ ! "$i" = "$seiten_2" ]

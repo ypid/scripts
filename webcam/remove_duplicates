@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-## @author Copyright (C) 2018 Robin Schneider <ypid@riseup.net>
-## @license AGPL-3.0-only <https://www.gnu.org/licenses/agpl-3.0.html>
+
+# SPDX-FileCopyrightText: 2018 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
 
 set -o nounset -o pipefail -o errexit
 

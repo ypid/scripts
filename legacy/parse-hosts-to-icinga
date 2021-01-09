@@ -1,7 +1,11 @@
 #!/usr/bin/env perl
+
+# SPDX-FileCopyrightText: 2014 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 # Generates a Icinga host definition for each host in a hosts file.
-# @author Robin Schneider <ypid23@aol.de>
-# @licence GPLv3+ <http://www.gnu.org/licenses/gpl.html>
+
 use strict;              # name space for variables
 use warnings;            # enable warnings
 use autodie;             # die if error

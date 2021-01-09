@@ -1,4 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
+# SPDX-FileCopyrightText: 2013 Alex Dergachev
+# SPDX-FileCopyrightText: 2016 Jonathon Reinhart
 
 # Source: https://gist.github.com/JonathonReinhart/f26365364918b44d82bbd6b90269fbd6
 
@@ -22,5 +25,5 @@ url += '/'
 httpd = BaseHTTPServer.HTTPServer((args.hostname, args.port), SimpleHTTPServer.SimpleHTTPRequestHandler)
 httpd.socket = ssl.wrap_socket(httpd.socket, certfile=args.certfile, keyfile=args.keyfile, server_side=True)
 
-print 'Serving at', url
+print('Serving at {}'.format(url))
 httpd.serve_forever()
