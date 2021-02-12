@@ -41,7 +41,7 @@ except ImportError:
 
 __version__ = '0.5.0'
 __maintainer__ = 'Robin Schneider <ypid@riseup.net>'
-LOG = logging.getLogger(__name__)
+_LOG = logging.getLogger(__name__)
 
 
 @functools.lru_cache()
@@ -49,7 +49,7 @@ def systemd_is_init_system():
     if 'psutil' in sys.modules:
         return any(True for p in psutil.process_iter() if "systemd" == p.name())
     else:
-        LOG.warning("pexpect is not installed so we just assume systemd is your init system.")
+        _LOG.warning("pexpect is not installed so we just assume systemd is your init system.")
         return True
 
 
@@ -69,12 +69,12 @@ def single_execute(name, command):
         if name is None:
             call = ['service', '--status-all']
 
-    LOG.info("Executing: {}".format(call))
+    _LOG.info("Executing: {}".format(call))
 
     if call[0] == 'service':
         return os.system(' '.join(call))
     elif 'pexpect' not in sys.modules or command not in ['status']:
-        LOG.warning("pexpect is not installed so we cannot rewrite the command output.")
+        _LOG.warning("pexpect is not installed so we cannot rewrite the command output.")
         # Note, os.execvp does not flush open file objects and descriptors!
         #  os.execvp(call[0], call)
         return os.system(' '.join(call))
