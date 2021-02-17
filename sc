@@ -49,7 +49,7 @@ def systemd_is_init_system():
     if 'psutil' in sys.modules:
         return any(True for p in psutil.process_iter() if "systemd" == p.name())
     else:
-        _LOG.warning("pexpect is not installed so we just assume systemd is your init system.")
+        _LOG.warning("psutil is not installed so we just assume systemd is your init system.")
         return True
 
 
@@ -63,7 +63,7 @@ def single_execute(name, command):
         if name is not None:
             if '.' not in name:
                 name += '.service'
-            call.extend([name])
+            call.extend([command, name])
     else:
         call = ['service', name, command]
         if name is None:
@@ -74,7 +74,8 @@ def single_execute(name, command):
     if call[0] == 'service':
         return os.system(' '.join(call))
     elif 'pexpect' not in sys.modules or command not in ['status']:
-        _LOG.warning("pexpect is not installed so we cannot rewrite the command output.")
+        if 'pexpect' not in sys.modules:
+            _LOG.warning("pexpect is not installed so we cannot rewrite the command output.")
         # Note, os.execvp does not flush open file objects and descriptors!
         #  os.execvp(call[0], call)
         return os.system(' '.join(call))
