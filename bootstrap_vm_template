@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+# SPDX-FileCopyrightText: 2021 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Bootstrap a Debian VM template with cloud-init NoCloud support.
+# If APT on the build server is using a (caching) proxy, then this proxy is
+# picked up and used for building without being included in the finished image.
+
+set -o nounset -o pipefail -o errexit
+
+eval "$(apt-config shell http_proxy 'Acquire::HTTP::Proxy')"
+export http_proxy
+
+export DIB_RELEASE="${1:-buster}"
+output_dir="${2}"
+
+if [[ "$DIB_RELEASE" == "bullseye" ]]; then
+	export DIB_DEBIAN_SECURITY_SUBPATH='-security'
+fi
+export break='after-error'
+
+export DIB_APT_MINIMAL_CREATE_INTERFACES='0'
+
+# To enable, add the "devuser" element and change and uncommon this below.
+#
+# export DIB_DEV_USER_USERNAME='testroot'
+# export DIB_DEV_USER_PASSWORD='mypw'
+# export DIB_DEV_USER_PWDLESS_SUDO='true'
+# export DIB_DEV_USER_AUTHORIZED_KEYS="$HOME/.ssh/authorized_keys"
+
+# export ELEMENTS_PATH="$HOME/scripts"
+
+disk-image-create --image-size 10 -o "${output_dir}/template-${DIB_RELEASE}.qcow2" debian vm block-device-gpt cloud-init-nocloud
