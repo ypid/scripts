@@ -68,3 +68,5 @@ sed --regexp-extended "s/^(\S+) +(\S+) +(\S+) +(\S+) +(\S+) +(\S+) +(.*)$/\1\t\2
     column -s"${tab}" -t
 
 rm --force "${temp}"
+
+systemctl list-timers
