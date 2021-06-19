@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# SPDX-FileCopyrightText: 2021 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+"""
+Parse feature list from https://www.heise.de/preisvergleich and dump it as
+markdown.
+"""
+
+import re
+
+from datetime import datetime
+
+#  from lxml import etree
+import defusedxml.lxml as etree
+
+__version__ = '1.0.0'
+
+
+def main():
+    args_parser = ArgumentParser(
+        description=__doc__,
+    )
+    args_parser.add_argument(
+        '-V',
+        '--version',
+        action='version',
+        version='%(prog)s {version}'.format(version=__version__)
+    )
+    args_parser.add_argument(
+        'file',
+        help=u"HTML input file",
+    )
+    cli_args = args_parser.parse_args()
+
+    print("Attribute | Value")
+    print("--- | ---")
+
+    with open(cli_args.file, 'r') as in_fh:
+        tree = etree.parse(in_fh)
+        for row in tree.xpath('//div[@class="variant__header__specs-grid__item"]'):
+            attribute = row[0].text.strip()
+            value_obj = row[1]
+            value = value_obj.text.strip()
+            if value_obj.xpath('time'):
+                time_obj = value_obj.xpath('(time)[1]')[0]
+                timestamp_string = time_obj.attrib['datetime']
+                timestamp_string_iso8601 = re.sub(
+                    r'([+-]\d{2}):?(\d{2})$',
+                    '\\1:\\2',
+                    timestamp_string)
+                value = str(datetime.fromisoformat(timestamp_string_iso8601))
+            elif attribute == 'RAM':
+                # Fix GB -> GiB.
+                value = re.sub(r'^(\d+)\s*(\w)(\w+)', '\\1 \\2i\\3', value)
+            elif attribute == 'Gelistet seit':
+                value = str(datetime.strptime(value, "%d.%m.%Y, %H:%M"))
+
+            attribute = attribute.replace('|', '\\|')
+            value = value.replace('|', '\\|')
+            print(' | '.join([attribute, value]))
+
+
+if __name__ == '__main__':
+    from argparse import ArgumentParser
+
+    main()
