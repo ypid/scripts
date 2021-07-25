@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# TODO: Give a short description of what the script does here.
+
+# SPDX-FileCopyrightText: 2021 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+PS4='+ $(date --rfc-3339=seconds), ${BASH_SOURCE-}:${LINENO-}: '
+export PS4
+trap 'echo Encountered an unexpected error. Exiting with exit code $? in ${BASH_SOURCE-}:${LINENO-}. >&2' ERR
+set -o nounset -o pipefail -o errexit -o errtrace
+
+echo "Actual script starts here."
