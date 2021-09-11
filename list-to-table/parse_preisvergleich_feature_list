@@ -61,6 +61,7 @@ def main():
 
             attribute = attribute.replace('|', '\\|')
             value = value.replace('|', '\\|')
+            value = value.replace('\n', ' ')
             print(' | '.join([attribute, value]))
 
 
