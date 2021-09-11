@@ -14,8 +14,8 @@ import re
 
 from datetime import datetime
 
-#  from lxml import etree
-import defusedxml.lxml as etree
+from lxml import html
+# import defusedxml.lxml as etree
 
 __version__ = '1.0.0'
 
@@ -39,8 +39,8 @@ def main():
     print("Attribute | Value")
     print("--- | ---")
 
-    with open(cli_args.file, 'r') as in_fh:
-        tree = etree.parse(in_fh)
+    with open(cli_args.file, 'rb') as in_fh:
+        tree = html.parse(in_fh)
         for row in tree.xpath('//div[@class="variant__header__specs-grid__item"]'):
             attribute = row[0].text.strip()
             value_obj = row[1]
