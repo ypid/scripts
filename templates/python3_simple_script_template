@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# SPDX-FileCopyrightText: 2021 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+"""
+TODO: Use the docstring to give a short description of what the script does.
+This is automatically included in the help text. Remove the following reference
+to the template itself from the docstring.
+"""
+
+import argparse
+
+__version__ = '0.1.0'
+
+
+def main():
+    args_parser = argparse.ArgumentParser(description=__doc__)
+    args_parser.add_argument('-H', '--host', required=True)
+    args_parser.add_argument(
+        '-V', '--version', action='version',
+        version='%(prog)s {}'.format(__version__))
+    cli_args = args_parser.parse_args()
+
+    print(cli_args.host)
+
+
+if __name__ == '__main__':
+    main()
