@@ -61,8 +61,6 @@ def single_execute(name, command):
 
     if systemd_is_init_system():
         if name is not None:
-            if '.' not in name:
-                name += '.service'
             call.extend([command, name])
     else:
         call = ['service', name, command]
