@@ -17,7 +17,7 @@ reset_terminal_title() {
     fi
 }
 
-## Simplified based on: https://github.com/Russell91/sshrc/blob/master/sshrc
+# Simplified based on: https://github.com/Russell91/sshrc/blob/master/sshrc
 get_ssh_cli_host() {
     while [[ -n "${1:-}" ]]; do
         case "${1:-}" in
