@@ -4,6 +4,9 @@
 # (2 * blocks_at_once * block_size) by default and compare each "page" against
 # this random pattern. This means that badblocks is not intended for secure
 # erasing by itself. Thats why ypid combined it with cryptsetup in this script.
+#
+# There is also https://github.com/Spearfoot/disk-burnin-and-testing and I
+# might switch to it when cryptsetup support is added.
 
 # Copyright (C) 2015-2020 Robin Schneider <ypid@riseup.net>
 # SPDX-FileCopyrightText: 2015-2017,2020-2021 Robin Schneider <ypid@riseup.net>
