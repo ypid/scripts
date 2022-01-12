@@ -17,6 +17,18 @@ fi
 if grep -q "^/dev/mapper/$name" /proc/mounts; then
     umount "/dev/mapper/$name"
 fi
+
+# Get path of disk for spin-down at the end.
+parent_device=""
+if command -v lsblk >/dev/null 2>&1 && command -v hdparm >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+    parent_device="$(lsblk "/dev/mapper/$name" --json --inverse --paths --output name | jq --raw-output '.blockdevices[0].children[0].name')"
+fi
+
 if cryptsetup status "$name"; then
     cryptdisks_stop "$name"
+fi
+
+# Attempt to spin-down the drive.
+if [ -n "$parent_device" ]; then
+    hdparm -y "$parent_device" || :
 fi
