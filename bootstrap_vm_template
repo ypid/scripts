@@ -13,7 +13,7 @@ set -o nounset -o pipefail -o errexit
 eval "$(apt-config shell http_proxy 'Acquire::HTTP::Proxy')"
 export http_proxy
 
-export DIB_RELEASE="${1:-buster}"
+export DIB_RELEASE="${1:-bullseye}"
 output_dir="${2}"
 
 if [[ "$DIB_RELEASE" == "bullseye" ]]; then
