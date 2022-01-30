@@ -16,7 +16,7 @@ export http_proxy
 export DIB_RELEASE="${1:-bullseye}"
 output_dir="${2}"
 
-if [[ "$DIB_RELEASE" == "bullseye" ]]; then
+if [[ "$DIB_RELEASE" == "bullseye" ]] || [[ "$DIB_RELEASE" == "bookworm" ]]; then
 	export DIB_DEBIAN_SECURITY_SUBPATH='-security'
 fi
 export break='after-error'
