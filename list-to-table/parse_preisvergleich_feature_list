@@ -41,15 +41,13 @@ def main():
 
     with open(cli_args.file, 'rb') as in_fh:
         tree = html.parse(in_fh)
-        for row in tree.xpath('//div[@class="variant__header__specs-grid__item"]'):
+        for row in tree.xpath('//div[@class="variant__header__specs"]//div[@class="specs-grid__item"]'):
 
             # The table is sometimes contained two times.
             # 1. The directly visible one.
             # 2. "Produkteigenschaften" on the bottom of the page.
             # I diffed the two. In my test both versions were identical.
-            # So we skip 2.
-            if '/form/' in tree.getpath(row):
-                continue
+            # We only select the first one with div[@class="variant__header__specs"]
 
             attribute = row[0].text.strip()
             value_obj = row[1]
