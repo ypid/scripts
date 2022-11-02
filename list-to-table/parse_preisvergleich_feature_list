@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# SPDX-FileCopyrightText: 2021 Robin Schneider <ypid@riseup.net>
+# SPDX-FileCopyrightText: 2021-2022 Robin Schneider <ypid@riseup.net>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -17,7 +17,7 @@ from datetime import datetime
 from lxml import html
 # import defusedxml.lxml as etree
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
 
 def main():
@@ -41,17 +41,22 @@ def main():
 
     with open(cli_args.file, 'rb') as in_fh:
         tree = html.parse(in_fh)
-        for row in tree.xpath('//div[@class="variant__header__specs"]//div[@class="specs-grid__item"]'):
+        for row in tree.xpath('//div[@class="variant__content__specs"]//div[@class="specs-grid__item"]'):
 
             # The table is sometimes contained two times.
             # 1. The directly visible one.
             # 2. "Produkteigenschaften" on the bottom of the page.
-            # I diffed the two. In my test both versions were identical.
-            # We only select the first one with div[@class="variant__header__specs"]
+            # I diffed the two. They are mostly identical. Sometimes, the
+            # first version is missing "Letztes Preisupdate" and "Gelistet
+            # seit" while the first version always seems to have it. So we
+            # always use the second version.
 
             attribute = row[0].text.strip()
             value_obj = row[1]
             value = value_obj.text.strip()
+            if attribute == 'Letztes Preisupdate':
+                # Not interesting for us. Skipping.
+                continue
             if value_obj.xpath('time'):
                 time_obj = value_obj.xpath('(time)[1]')[0]
                 timestamp_string = time_obj.attrib['datetime']
