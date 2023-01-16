@@ -18,3 +18,12 @@
 [submodule "submodules/ata-secure-erase"]
 	path = submodules/ata-secure-erase
 	url = https://github.com/TigerOnVaseline/ata-secure-erase.git
+[submodule "submodules/netns"]
+	path = submodules/netns
+	url = https://github.com/Lekensteyn/netns
+[submodule "submodules/iptables-trace"]
+	path = submodules/iptables-trace
+	url = https://github.com/commonism/iptables-trace
+[submodule "submodules/distrib-dl"]
+	path = submodules/distrib-dl
+	url = https://github.com/nodiscc/distrib-dl.git
