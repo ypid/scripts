@@ -11,12 +11,11 @@ This is automatically included in the help text. Remove the following reference
 to the template itself from the docstring.
 """
 
-import argparse
-
 __version__ = '0.1.0'
 
 
 def main():
+    import argparse
     args_parser = argparse.ArgumentParser(description=__doc__)
     args_parser.add_argument('-H', '--host', required=True)
     args_parser.add_argument(
