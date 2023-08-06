@@ -48,12 +48,15 @@ def main():
             # 2. "Produkteigenschaften" on the bottom of the page.
             # I diffed the two. They are mostly identical. Sometimes, the
             # first version is missing "Letztes Preisupdate" and "Gelistet
-            # seit" while the first version always seems to have it. So we
+            # seit" while the second version always seems to have it. So we
             # always use the second version.
 
             attribute = row[0].text.strip()
             value_obj = row[1]
-            value = value_obj.text.strip()
+            try:
+                value = value_obj.text.strip()
+            except:
+                value = ''
             if attribute == 'Letztes Preisupdate':
                 # Not interesting for us. Skipping.
                 continue
