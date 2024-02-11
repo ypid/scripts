@@ -18,3 +18,6 @@
 [submodule "submodules/copier"]
 	path = submodules/copier
 	url = https://github.com/copier-org/copier.git
+[submodule "submodules/ata-secure-erase"]
+	path = submodules/ata-secure-erase
+	url = https://github.com/TigerOnVaseline/ata-secure-erase.git
