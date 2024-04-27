@@ -13,7 +13,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]
 then
     PS4='+ $(date --rfc-3339=seconds), ${BASH_SOURCE-}:${LINENO-}: '
     export PS4
-    trap 'echo Encountered an unexpected error. Exiting with exit code $? in ${BASH_SOURCE-}:${LINENO-}. >&2' ERR
+    trap 'echo Unhandled error at ${BASH_SOURCE-}:${LINENO-} caused exit with code $?. >&2' ERR
     set -o nounset -o pipefail -o errexit -o errtrace
 
     main "$@"
