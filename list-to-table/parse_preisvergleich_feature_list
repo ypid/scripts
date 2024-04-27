@@ -8,6 +8,7 @@
 """
 Parse feature list from https://www.heise.de/preisvergleich and dump it as
 markdown.
+See also: https://geizhals.de/
 """
 
 import re
