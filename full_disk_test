@@ -8,6 +8,9 @@
 function main() {
     dev="$1"
 
+    smartctl --test=short "$dev"
+    sleep 200
+
     badblocks_and_secure_erase "$dev"
 
     # Give the disk some rest ;-)
