@@ -14,9 +14,7 @@ if [ -z "$name" ]; then
     exit 1
 fi
 
-if grep -q "^/dev/mapper/$name" /proc/mounts; then
-    umount "/dev/mapper/$name"
-fi
+umount "/dev/mapper/$name"
 
 # Get path of disk for spin-down at the end.
 parent_device=""
