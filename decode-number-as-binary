@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# SPDX-FileCopyrightText: 2025 Robin Schneider <ypid@riseup.net>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+"""
+For a given decimal number, encode it as binary and print which bits are set
+(place) and their place value.
+
+Ref: https://en.wikipedia.org/wiki/Positional_notation#Exponentiation
+
+This is useful to decode the meaning of:
+
+* Linux Magic System Request (SysRQ)
+"""
+
+import argparse
+from tabulate import tabulate
+
+
+__version__ = "0.1.0"
+
+
+def superscript(exponent):
+    # Pro SymPy:
+    # * Avoid the need to list all superscript characters.
+    # Contra SymPy:
+    # * Slow Python module import time.
+    # * Third party dependency for this otherwise very simple script.
+    # Conclusion: Do not use SymPy.
+
+    # https://stackoverflow.com/questions/8651361/how-do-you-print-superscript/62987096#62987096
+    return "".join(["⁰¹²³⁴⁵⁶⁷⁸⁹"[ord(c) - ord("0")] for c in str(exponent)])
+
+    #  return f"^{exponent}"
+
+
+def decode_number(number):
+    table = []
+    for i in range(number.bit_length()):
+        if (number >> i) & 1:
+            place_value = 1 << i
+            table.append(
+                ["2" + superscript(i), "=", place_value, "=", hex(place_value)]
+            )
+
+    print(f"The number {number} has the following bits set when encoded as binary:")
+    print(
+        tabulate(
+            table,
+            tablefmt="plain",
+            #        ["2^4",  "=",    "16",    "=",    "0x10"]
+            colalign=["left", "left", "right", "left", "right"],
+        )
+    )
+
+
+def main():
+    args_parser = argparse.ArgumentParser(description=__doc__)
+    args_parser.add_argument("number", type=int)
+    args_parser.add_argument(
+        "-V", "--version", action="version", version="%(prog)s {}".format(__version__)
+    )
+    cli_args = args_parser.parse_args()
+
+    decode_number(cli_args.number)
+
+
+if __name__ == "__main__":
+    main()
