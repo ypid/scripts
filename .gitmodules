@@ -27,3 +27,6 @@
 [submodule "submodules/distrib-dl"]
 	path = submodules/distrib-dl
 	url = https://github.com/nodiscc/distrib-dl.git
+[submodule "submodules/qemu-sendkeys"]
+	path = submodules/qemu-sendkeys
+	url = https://github.com/mvidner/sendkeys.git
