@@ -4,9 +4,18 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+#- Compatible with http://github.com/tj/mmake to show help.
+
+#- Disable smartness to make GNU Make more predictable.
+.POSIX:
+.DELETE_ON_ERROR:
+.ONESHELL:
+.SUFFIXES:
 SHELL ?= /bin/bash -o nounset -o pipefail -o errexit
 MAKEFLAGS += --no-builtin-rules
-.SUFFIXES:
+
+#- Phony targets (targets that don't represent files)
+.PHONY: all psql nbshell start all-secrets show-secrets clean
 
 #-# Help {{{
 #-# https://stackoverflow.com/a/26339924/2239985
