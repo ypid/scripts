@@ -17,5 +17,6 @@ import sys
 from datetime import date
 
 yyww = sys.argv[1]
-year, week = 2000 + int(yyww[:2]), int(yyww[2:])
+year = int(yyww[:2]) + 2000
+week = int(yyww[2:])
 print(date.fromisocalendar(year, week, 1).isoformat())
