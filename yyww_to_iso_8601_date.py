@@ -15,9 +15,10 @@ The output is the Monday of the specified ISO calendar week,
 formatted as YYYY-MM-DD.
 
 Example:
-  ./date.py 2533
+  ./yyww_to_iso_8601_date.py 2533
   2025-08-11
 """
+
 import sys
 from datetime import date
 
